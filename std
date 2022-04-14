@@ -1,0 +1,84 @@
+#!/bin/bash
+# shellcheck disable=SC2120
+function std_prtline() {
+  local parameters char title len_total
+
+  if ! parameters=$(getopt -o c:t:l: --long char:,title:,length: -n "$0" -- "$@"); then
+    return 1
+  fi
+
+  char=" "
+  title=""
+  len_total=32
+
+  eval set -- "${parameters}"
+
+  while true; do
+    case "$1" in
+    -c | --char)
+      char="$2"
+      if [[ ${#char} -ne 1 ]]; then
+        echo "ERROR: invalid argument for -c|--char: it should have only 1 character"
+        return 1
+      fi
+      shift 2
+      ;;
+    -t | --title)
+      title="$2"
+      shift 2
+      ;;
+    -l | --length)
+      len_total="$2"
+      shift 2
+      ;;
+    --)
+      break
+      ;;
+    *)
+      echo "ERROR: invalid options: \"$1\""
+      return 1
+      ;;
+    esac
+  done
+
+  local len_title=${#title}
+
+  if [[ $((len_total - len_title)) -lt 4 ]]; then
+    echo "ERROR: invalid value: total length should be greater than length of title by at least 4"
+    return 1
+  fi
+
+  if [[ ${len_title} -eq 0 ]]; then
+    for ((i = 0; i < len_total; i++)); do
+      printf "%s" "${char}"
+    done
+    printf "\n"
+    return 0
+  fi
+
+  # reaching here means len_title > 0
+  local len_diff len_left len_right
+
+  len_diff=$((len_total - len_title))
+  if [[ $((len_diff % 2)) -eq 0 ]]; then
+    len_left=$((len_diff / 2))
+    len_right=${len_left}
+  else
+    len_left=$(((len_diff - 1) / 2))
+    len_right=$((len_left + 1))
+  fi
+
+  for ((i = 0; i < len_left; i++)); do
+    [[ ${i} -ne $((len_left - 1)) ]] && printf "%s" "${char}" || printf " "
+  done
+
+  printf "%s" "${title}"
+
+  for ((i = 0; i < len_right; i++)); do
+    [[ ${i} -ne 0 ]] && printf "%s" "${char}" || printf " "
+  done
+
+  printf "\n"
+
+  return 0
+}
