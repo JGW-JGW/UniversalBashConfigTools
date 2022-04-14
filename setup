@@ -1,0 +1,62 @@
+#!/bin/bash
+while true; do
+  cat <<'EOF'
+
+===========================================
+        Universal Bash Config Tools
+===========================================
+    1. Download from GitHub and Install
+    2. Install from Local Disk
+    0. Cancel and Exit
+===========================================
+
+EOF
+
+  read -rp "Please input your choice: " choice
+
+  case ${choice} in
+  1)
+    echo "Your choice: 1. Download from GitHub and Install"
+
+    # 检查命令是否存在
+    for command in wget unzip; do
+      if ! type "${command}" 1>/dev/null 2>/dev/null; then
+        echo -e "ERROR: command \"${command}\" not found"
+        exit 255
+      fi
+    done
+
+    # 输入安装路径
+    read -rp "Please input absolute path of the directory to be installed in (by default is current directory): " install_dir
+
+    if [[ -n "${install_dir}" && -e "${install_dir}" && ! -d "${install_dir}" ]]; then
+      echo -e "ERROR: \"${install_dir}\" is not a directory"
+      exit 255
+    fi
+
+    [[ -z "${install_dir}" ]] && install_dir="$(pwd)"
+
+    destiny_url="https://github.com/JGW-JGW/UniversalBashConfigTools/archive/refs/heads/master.zip"
+
+    wget --no-cookies --preserve-permissions --no-check-certificate -N -P "${install_dir}" "${destiny_url}"
+
+    zip_name="$(dirname ${destiny_url})"
+
+    unzip -o "${install_dir}/${zip_name}"
+
+    rm -f "${install_dir}/${zip_name}"
+    ;;
+  2)
+    echo "Your choice: 2. Install from Local Disk"
+    ;;
+  0)
+    exit
+    ;;
+  *)
+    echo "Please input a valid choice!"
+    ;;
+  esac
+done
+
+[[ -f /usr/bin/ubct ]] && rm -f /usr/bin/ubct
+#ln -s
