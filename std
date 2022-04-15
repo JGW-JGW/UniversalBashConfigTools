@@ -1,5 +1,33 @@
 #!/bin/bash
 # shellcheck disable=SC2120
+function std_prtmsg() {
+  local type="$1"
+  local msg="$2"
+
+  case "${type}" in
+  DONE | CORRECT)
+    echo -e "\e[40;31;1m${type}\e[0m\c"
+    ;;
+  SKIP)
+    echo -e "\e[47;30m${type}\e[0m\c"
+    ;;
+  ERROR | CHECK)
+    echo -e "\e[47;30;5m${type}\e[0m\c"
+    ;;
+  INFO)
+    echo -e "${type}\c"
+    ;;
+  *)
+    echo -e "ERROR: unknown type: \"${type}\""
+    return 1
+    ;;
+  esac
+
+  [[ -n "${msg}" ]] && echo -e ": ${msg}" || echo
+
+  return 0
+}
+
 function std_prtline() {
   local parameters char title len_total
 
@@ -18,7 +46,7 @@ function std_prtline() {
     -c | --char)
       char="$2"
       if [[ ${#char} -ne 1 ]]; then
-        echo "ERROR: invalid argument for -c|--char: it should have only 1 character"
+        std_prtmsg "ERROR" "invalid argument for -c/--char: \"${char}\""
         return 1
       fi
       shift 2
@@ -35,7 +63,7 @@ function std_prtline() {
       break
       ;;
     *)
-      echo "ERROR: invalid options: \"$1\""
+      std_prtmsg "ERROR" "invalid option: \"$1\""
       return 1
       ;;
     esac
@@ -44,7 +72,7 @@ function std_prtline() {
   local len_title=${#title}
 
   if [[ $((len_total - len_title)) -lt 4 ]]; then
-    echo "ERROR: invalid value: total length should be greater than length of title by at least 4"
+    std_prtmsg "ERROR" "invalid value: total length should be greater than length of title by at least 4, current len_total = ${len_total}, len_title = ${len_title}"
     return 1
   fi
 
@@ -79,34 +107,6 @@ function std_prtline() {
   done
 
   printf "\n"
-
-  return 0
-}
-
-function std_prtmsg() {
-  local type="$1"
-  local msg="$2"
-
-  case "${type}" in
-  DONE | CORRECT)
-    echo -e "\e[40;31;1m${type}\e[0m\c"
-    ;;
-  SKIP)
-    echo -e "\e[47;30m${type}\e[0m\c"
-    ;;
-  ERROR | CHECK)
-    echo -e "\e[47;30;5m${type}\e[0m\c"
-    ;;
-  INFO)
-    echo -e "${type}\c"
-    ;;
-  *)
-    echo -e "ERROR: unknown type: \"${type}\""
-    return 1
-    ;;
-  esac
-
-  [[ -n "${msg}" ]] && echo -e ": ${msg}" || echo
 
   return 0
 }
