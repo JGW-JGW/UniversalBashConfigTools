@@ -122,10 +122,10 @@ function std_get_conf() {
   local line value
 
   line=$(grep -E "^[[:space:]]*${var}([[:space:]]+|[[:space:]]*=)" "${file}" | tail -1)
-
+  
   if [[ ${line} =~ '=' ]]; then
-    std_strip "$(echo "${line}" | awk -F= '{print $2}')"
+    eval echo "$(std_strip "$(echo "${line}" | awk -F= '{print $2}')")"
   else
-    std_strip "$(echo "${line}" | awk '{print $2}')"
+    eval echo "$(std_strip "$(echo "${line}" | awk '{print $2}')")"
   fi
 }
