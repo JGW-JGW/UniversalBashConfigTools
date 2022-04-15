@@ -1,5 +1,10 @@
 #!/bin/bash
 # shellcheck disable=SC2120
+function std_strip() {
+  echo "$*" | sed -r 's/^[[:space:]]+//' | sed -r 's/[[:space:]]+$//'
+  return 0
+}
+
 function std_prtmsg() {
   local type="$1"
   local msg="$2"
@@ -110,3 +115,18 @@ function std_prtline() {
 
   return 0
 }
+
+function std_get_conf() {
+  local var="$1"
+  local file="$2"
+  local line value
+
+  line=$(grep -E "^[[:space:]]*${var}([[:space:]]+|[[:space:]]*=)" "${file}" | tail -1)
+
+  if [[ ${line} =~ '=' ]]; then
+    std_strip "$(echo "${line}" | awk -F= '{print $2}')"
+  else
+    std_strip "$(echo "${line}" | awk '{print $2}')"
+  fi
+}
+

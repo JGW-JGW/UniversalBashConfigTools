@@ -1,7 +1,95 @@
 #!/bin/bash
-# UBCT_PATH="/mnt/g/UniversalBashConfigTools"
 UBCT_PATH="$(dirname "$(readlink -f "$0")")"
 
+# shellcheck source=./std
+. "${UBCT_PATH}/std"
 
 # shellcheck source=./init
-source "${UBCT_PATH}"/init
+. "${UBCT_PATH}/init"
+
+# 识别参数并执行
+# bashsupport disable=GrazieInspection
+case "$1" in
+-h | --help | help)
+  cat <<'EOF'
+Name: Universal Bash Config Tools
+Usage: ubct [MODULE] [OPTION] [ARGUMENT]...
+
+Basic:
+  ubct                        print version information and exit
+  ubct -V, --version          print version information and exit
+  ubct -h, --help             display this help and exit
+  ubct -u, --update           download from GitHub and reinstall
+
+Config:
+  ubct config os              auto-detect os and configure it
+  ubct config suse            config suse
+
+Verify:
+  ubct verify os              auto-detect os and verify its config
+  ubct verify suse            verify suse
+EOF
+  exit 0
+  ;;
+"" | -V | --version)
+  title="==== Universal Bash Config Tools $(std_get_conf "UBCT_VERSION" "${UBCT_CONF}") ===="
+  len_total=${#title}
+  len_left=15
+  len_right=$((len_total - len_left))
+
+  printf "%s" "${title}\n"
+  printf "%-${len_left}s%${len_right}s\n" "OS:" "${OS_ID}-${OS_VERSION_ID}"
+  printf "%-${len_left}s%${len_right}s\n" "Manufacturer:" "${MANUFACTURER}"
+  printf "%-${len_left}s%${len_right}s\n" "Product Name:" "${PRODUCT_NAME}"
+  printf "%-${len_left}s%${len_right}s\n" "CPU(s):" "${CPU_NUM}"
+  printf "%-${len_left}s%${len_right}s\n" "Architecture:" "${CPU_TYPE}"
+  printf "%-${len_left}s%${len_right}s\n" "Total Memory:" "${MEM_SIZE_GB}"
+  std_prtline -c "=" -l "${len_total}"
+  exit 0
+  ;;
+-u | --update)
+  # 检查命令是否存在
+  for command in curl unzip; do
+    if ! type "${command}" 1>/dev/null 2>/dev/null; then
+      std_prtmsg "ERROR" "command not found: \"${command}\""
+      exit 255
+    fi
+  done
+
+  # 获取安装路径
+  install_dir="${UBCT_PATH}"
+
+  destiny_url="https://github.com/JGW-JGW/UniversalBashConfigTools/archive/refs/heads/master.zip"
+
+  zip_name="$(basename ${destiny_url})"
+
+  curl -L -o "${install_dir}/${zip_name}" ${destiny_url}
+
+  unzip -o "${install_dir}/${zip_name}" -d "${install_dir}" || exit 255
+
+  rm -f "${install_dir}/${zip_name}"
+
+  dir_name="UniversalBashConfigTools-master"
+
+  mv "${install_dir}"/${dir_name}/* "${install_dir}"
+
+  rmdir "${install_dir}/${dir_name}"
+
+  ubct_cmd="/usr/bin/ubct"
+  ubct_completion="/etc/bash_completion.d/ubct-completion.sh"
+  ubct_conf="/etc/ubct.conf"
+
+  for link in ${ubct_cmd} ${ubct_completion} ${ubct_conf}; do
+    [[ -f ${link} ]] && rm -f ${link}
+    ln -s "${install_dir}/$(basename ${link})" ${link}
+  done
+
+  . ${ubct_completion}
+
+  std_prtmsg "DONE" "UBCT installed successfully"
+  ;;
+*)
+  std_prtmsg "ERROR" "invalid option: \"$1\", try \"ubct -h\""
+  exit 255
+  ;;
+esac
