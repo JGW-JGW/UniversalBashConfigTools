@@ -129,4 +129,3 @@ function std_get_conf() {
     std_strip "$(echo "${line}" | awk '{print $2}')"
   fi
 }
-

@@ -29,7 +29,7 @@ EOF
     done
 
     # 输入安装路径
-    read -rp "Please input the absolute path of installation directory (by default is $(pwd): " install_dir
+    read -rp "Please input the absolute path of installation directory (by default is $(pwd)): " install_dir
 
     if [[ -n "${install_dir}" ]]; then
       if [[ -e "${install_dir}" && ! -d "${install_dir}" ]]; then
@@ -72,7 +72,7 @@ EOF
     ;;
   2) # 指定本地磁盘中的 zip 包并安装
     # 输入 zip 包的绝对路径
-    read -rp "Please input the absolute path of installation zip package (by default is $(pwd)/master.zip: " zip_file
+    read -rp "Please input the absolute path of installation zip package (by default is $(pwd)/master.zip): " zip_file
     [[ -z "${zip_file}" ]] && zip_file="$(pwd)/master.zip"
     if [[ ! -f "${zip_file}" ]]; then
       std_prtmsg "ERROR" "file not found: \"${zip_file}\""
@@ -80,7 +80,7 @@ EOF
     fi
 
     # 输入安装路径
-    read -rp "Please input the absolute path of installation directory (by default is $(pwd): " install_dir
+    read -rp "Please input the absolute path of installation directory (by default is $(pwd)): " install_dir
 
     if [[ -n "${install_dir}" ]]; then
       if [[ -e "${install_dir}" && ! -d "${install_dir}" ]]; then
