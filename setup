@@ -1,6 +1,6 @@
 #!/bin/bash
 # shellcheck source=./std
-. "$(dirname "$0")/std"
+. "$(dirname "$0")"/std
 
 while true; do
   cat <<'EOF'
@@ -105,9 +105,9 @@ EOF
     ubct_conf="/etc/ubct.conf"
 
     for link in ${ubct_cmd} ${ubct_completion} ${ubct_conf}; do
-      [[ -L ${link} ]] && rm -f ${link}
-      ln -s "${install_dir}/$(basename ${link})" ${link}
-    done
+  [[ -L ${link} ]] && rm -f ${link}
+  ln -s "${install_dir}/$(basename ${link})" ${link}
+done
 
     . ${ubct_completion}
 

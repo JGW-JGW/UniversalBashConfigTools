@@ -1,20 +1,20 @@
 #!/bin/bash
 # UBCT 相关信息
-UBCT_PATH="$(dirname "$(readlink -f "$0")")"
-UBCT_CONF="${UBCT_PATH}/ubct.conf"
+UBCT_PATH=$(dirname "$(readlink -f "$0")")
+UBCT_CONF=${UBCT_PATH}/ubct.conf
 
 # 导入 std
 # shellcheck source=./std
 . "${UBCT_PATH}/std"
 
 # OS 相关信息
-MANUFACTURER="$(std_strip "$(dmidecode -t1 | grep "Manufacturer:" | awk -F: '{print $2}')")"
-PRODUCT_NAME="$(std_strip "$(dmidecode -t1 | grep "Product Name:" | awk -F: '{print $2}')")"
-CPU_NUM="$(std_strip "$(lscpu | grep -E "^CPU\(s\):" | awk -F: '{print $2}')")"
-CPU_TYPE="$(uname -m)"
-MEM_SIZE_KB="$(grep "MemTotal:" /proc/meminfo | grep -Eo "[0-9]+")"
-MEM_SIZE_GB="$(echo "scale=2; ${MEM_SIZE_KB} / 1048576" | bc)"
-OS_ID="$(std_get_conf "ID" /etc/os-release)"
-OS_VERSION_ID="$(std_get_conf "VERSION_ID" /etc/os-release)"
+MANUFACTURER=$(std_strip "$(dmidecode -t1 | grep "Manufacturer:" | awk -F: '{print $2}')")
+PRODUCT_NAME=$(std_strip "$(dmidecode -t1 | grep "Product Name:" | awk -F: '{print $2}')")
+CPU_NUM=$(std_strip "$(lscpu | grep -E "^CPU\(s\):" | awk -F: '{print $2}')")
+CPU_TYPE=$(uname -m)
+MEM_SIZE_KB=$(grep "MemTotal:" /proc/meminfo | grep -Eo "[0-9]+")
+MEM_SIZE_GB=$(echo "scale=2; ${MEM_SIZE_KB} / 1048576" | bc)
+OS_ID=$(std_get_conf "ID" /etc/os-release)
+OS_VERSION_ID=$(std_get_conf "VERSION_ID" /etc/os-release)
 
 echo

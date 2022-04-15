@@ -1,11 +1,11 @@
 #!/bin/bash
-UBCT_PATH="$(dirname "$(readlink -f "$0")")"
+UBCT_PATH=$(dirname "$(readlink -f "$0")")
 
 # shellcheck source=./std
-. "${UBCT_PATH}/std"
+. "${UBCT_PATH}"/std
 
 # shellcheck source=./init
-. "${UBCT_PATH}/init"
+. "${UBCT_PATH}"/init
 
 # 识别参数并执行
 # bashsupport disable=GrazieInspection
@@ -37,7 +37,7 @@ EOF
   len_left=15
   len_right=$((len_total - len_left))
 
-  printf "%s" "${title}\n"
+  printf "%s\n" "${title}"
   printf "%-${len_left}s%${len_right}s\n" "OS:" "${OS_ID}-${OS_VERSION_ID}"
   printf "%-${len_left}s%${len_right}s\n" "Manufacturer:" "${MANUFACTURER}"
   printf "%-${len_left}s%${len_right}s\n" "Product Name:" "${PRODUCT_NAME}"
@@ -80,9 +80,9 @@ EOF
   ubct_conf="/etc/ubct.conf"
 
   for link in ${ubct_cmd} ${ubct_completion} ${ubct_conf}; do
-    [[ -L ${link} ]] && rm -f ${link}
-    ln -s "${install_dir}/$(basename ${link})" ${link}
-  done
+  [[ -L ${link} ]] && rm -f ${link}
+  ln -s "${install_dir}/$(basename ${link})" ${link}
+done
 
   . ${ubct_completion}
 
