@@ -56,8 +56,9 @@ EOF
     fi
   done
 
-  # 获取安装路径
-  install_dir="${UBCT_PATH}"
+  # 获取安装路径和旧版本号
+  install_dir=${UBCT_PATH}
+  old_version=$(std_get_conf UBCT_VERSION "${UBCT_PATH}"/ubct.conf)
 
   destiny_url="https://github.com/JGW-JGW/UniversalBashConfigTools/archive/refs/heads/master.zip"
 
@@ -80,13 +81,15 @@ EOF
   ubct_conf="/etc/ubct.conf"
 
   for link in ${ubct_cmd} ${ubct_completion} ${ubct_conf}; do
-  [[ -L ${link} ]] && rm -f ${link}
-  ln -s "${install_dir}/$(basename ${link})" ${link}
-done
+    [[ -L ${link} ]] && rm -f ${link}
+    ln -s "${install_dir}/$(basename ${link})" ${link}
+  done
 
   . ${ubct_completion}
 
-  std_prtmsg "DONE" "UBCT installed successfully"
+  new_version=$(std_get_conf UBCT_VERSION "${UBCT_PATH}"/ubct.conf)
+
+  std_prtmsg "DONE" "UBCT updated successfully, from ${old_version} to ${new_version}"
   ;;
 *)
   std_prtmsg "ERROR" "invalid option: \"$1\", try \"ubct -h\""
