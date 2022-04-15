@@ -21,33 +21,33 @@ EOF
   case ${choice} in
   1) # 从 GitHub 上下载 zip 包并安装
     # 检查命令是否存在
-    for command in wget unzip; do
+    for command in curl unzip; do
       if ! type "${command}" 1>/dev/null 2>/dev/null; then
-        echo -e "ERROR: command \"${command}\" not found"
+        std_prtmsg "ERROR" "command not found: \"${command}\""
         exit 255
       fi
     done
 
     # 输入安装路径
-    read -rp "Please input absolute path of the directory to be installed in (by default is current directory): " install_dir
+    read -rp "Please input the absolute path of installation directory (by default is $(pwd): " install_dir
 
     if [[ -n "${install_dir}" ]]; then
       if [[ -e "${install_dir}" && ! -d "${install_dir}" ]]; then
-        echo -e "ERROR: \"${install_dir}\" is not a directory"
+        std_prtmsg "ERROR" "not a directory: \"${install_dir}\""
         exit 255
       fi
-      mkdir -p "${install_dir}"
+      [[ ! -e "${install_dir}" ]] && mkdir -p "${install_dir}"
     else
       install_dir="$(pwd)"
     fi
 
     destiny_url="https://github.com/JGW-JGW/UniversalBashConfigTools/archive/refs/heads/master.zip"
 
-    wget --no-cookies --preserve-permissions --no-check-certificate -N -P "${install_dir}" "${destiny_url}"
-
     zip_name="$(basename ${destiny_url})"
 
-    unzip -o "${install_dir}/${zip_name}" -d "${install_dir}"
+    curl -L -o "${install_dir}/${zip_name}" ${destiny_url}
+
+    unzip -o "${install_dir}/${zip_name}" -d "${install_dir}" || exit 255
 
     rm -f "${install_dir}/${zip_name}"
 
@@ -57,9 +57,9 @@ EOF
 
     rmdir "${install_dir}/${dir_name}"
 
-    ubct_cmd=/usr/bin/ubct
-    ubct_completion=/etc/bash_completion.d/ubct-completion.sh
-    ubct_conf=/etc/ubct.conf
+    ubct_cmd="/usr/bin/ubct"
+    ubct_completion="/etc/bash_completion.d/ubct-completion.sh"
+    ubct_conf="/etc/ubct.conf"
 
     for link in ${ubct_cmd} ${ubct_completion} ${ubct_conf}; do
       [[ -f ${link} ]] && rm -f ${link}
@@ -67,16 +67,57 @@ EOF
     done
 
     . ${ubct_completion}
-    ;;
-  2) # 指定本地磁盘中的介质并安装
 
+    std_prtmsg "DONE" "UBCT installed successfully"
     ;;
+  2) # 指定本地磁盘中的 zip 包并安装
+    # 输入 zip 包的绝对路径
+    read -rp "Please input the absolute path of installation zip package (by default is $(pwd)/master.zip: " zip_file
+    [[ -z "${zip_file}" ]] && zip_file="$(pwd)/master.zip"
+    if [[ ! -f "${zip_file}" ]]; then
+      std_prtmsg "ERROR" "file not found: \"${zip_file}\""
+      exit 255
+    fi
 
-  0)
+    # 输入安装路径
+    read -rp "Please input the absolute path of installation directory (by default is $(pwd): " install_dir
+
+    if [[ -n "${install_dir}" ]]; then
+      if [[ -e "${install_dir}" && ! -d "${install_dir}" ]]; then
+        std_prtmsg "ERROR" "is not a directory: \"${install_dir}\""
+        exit 255
+      fi
+      [[ ! -e "${install_dir}" ]] && mkdir -p "${install_dir}"
+    else
+      install_dir="$(pwd)"
+    fi
+
+    unzip -o "${zip_file}" -d "${install_dir}" || exit 255
+
+    dir_name="UniversalBashConfigTools-master"
+
+    mv "${install_dir}"/${dir_name}/* "${install_dir}"
+
+    rmdir "${install_dir}/${dir_name}"
+
+    ubct_cmd="/usr/bin/ubct"
+    ubct_completion="/etc/bash_completion.d/ubct-completion.sh"
+    ubct_conf="/etc/ubct.conf"
+
+    for link in ${ubct_cmd} ${ubct_completion} ${ubct_conf}; do
+      [[ -f ${link} ]] && rm -f ${link}
+      ln -s "${install_dir}/$(basename ${link})" ${link}
+    done
+
+    . ${ubct_completion}
+
+    std_prtmsg "DONE" "UBCT installed successfully"
+    ;;
+  0) # 退出
     exit
     ;;
   *)
-    echo "Please input a valid number!"
+    std_prtmsg "ERROR" "invalid input: \"${choice}\""
     ;;
   esac
 done

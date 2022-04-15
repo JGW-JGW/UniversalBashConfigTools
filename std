@@ -82,3 +82,31 @@ function std_prtline() {
 
   return 0
 }
+
+function std_prtmsg() {
+  local type="$1"
+  local msg="$2"
+
+  case "${type}" in
+  DONE | CORRECT)
+    echo -e "\e[40;31;1m${type}\e[0m\c"
+    ;;
+  SKIP)
+    echo -e "\e[47;30m${type}\e[0m\c"
+    ;;
+  ERROR | CHECK)
+    echo -e "\e[47;30;5m${type}\e[0m\c"
+    ;;
+  INFO)
+    echo -e "${type}\c"
+    ;;
+  *)
+    echo -e "ERROR: unknown type: \"${type}\""
+    return 1
+    ;;
+  esac
+
+  [[ -n "${msg}" ]] && echo -e ": ${msg}" || echo
+
+  return 0
+}
