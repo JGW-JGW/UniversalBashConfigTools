@@ -62,7 +62,7 @@ EOF
     ubct_conf="/etc/ubct.conf"
 
     for link in ${ubct_cmd} ${ubct_completion} ${ubct_conf}; do
-      [[ -f ${link} ]] && rm -f ${link}
+      [[ -L ${link} ]] && rm -f ${link}
       ln -s "${install_dir}/$(basename ${link})" ${link}
     done
 
@@ -105,7 +105,7 @@ EOF
     ubct_conf="/etc/ubct.conf"
 
     for link in ${ubct_cmd} ${ubct_completion} ${ubct_conf}; do
-      [[ -f ${link} ]] && rm -f ${link}
+      [[ -L ${link} ]] && rm -f ${link}
       ln -s "${install_dir}/$(basename ${link})" ${link}
     done
 
