@@ -1,6 +1,5 @@
 #!/bin/bash
 # UBCT 相关信息
-UBCT_PATH=$(dirname "$(readlink -f "$0")")
 UBCT_CONF=${UBCT_PATH}/ubct.conf
 
 # 导入 std

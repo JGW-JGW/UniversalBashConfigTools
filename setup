@@ -1,6 +1,30 @@
 #!/bin/bash
-# shellcheck source=./std
-. "$(dirname "$0")"/std
+function setup_cmd_exists() {
+  local cmd=$1
+  type "${cmd}" 1>/dev/null 2>/dev/null && return 0 || return 1
+}
+
+function setup_prtmsg() {
+  local type="$1"
+  local msg="$2"
+
+  case "${type}" in
+  DONE)
+    echo -e "\e[40;31;1m${type}\e[0m\c"
+    ;;
+  ERROR)
+    echo -e "\e[47;30;5m${type}\e[0m\c"
+    ;;
+  *)
+    echo -e "ERROR: unknown type: \"${type}\""
+    return 1
+    ;;
+  esac
+
+  [[ -n "${msg}" ]] && echo -e ": ${msg}" || echo
+
+  return 0
+}
 
 while true; do
   cat <<'EOF'
@@ -22,8 +46,8 @@ EOF
   1) # 从 GitHub 上下载 zip 包并安装
     # 检查命令是否存在
     for command in curl unzip; do
-      if ! std_cmd_exists ${command}; then
-        std_prtmsg "ERROR" "command not found: \"${command}\""
+      if ! setup_cmd_exists ${command}; then
+        setup_prtmsg ERROR "command not found: \"${command}\""
         exit 255
       fi
     done
@@ -33,7 +57,7 @@ EOF
 
     if [[ -n "${install_dir}" ]]; then
       if [[ -e "${install_dir}" && ! -d "${install_dir}" ]]; then
-        std_prtmsg "ERROR" "not a directory: \"${install_dir}\""
+        setup_prtmsg ERROR "not a directory: \"${install_dir}\""
         exit 255
       fi
       [[ ! -e "${install_dir}" ]] && mkdir -p "${install_dir}"
@@ -70,12 +94,12 @@ EOF
 
     chmod a+x ${ubct_cmd}
 
-    std_prtmsg "DONE" "UBCT installed successfully"
+    setup_prtmsg DONE "UBCT installed successfully"
     ;;
   2) # 指定本地磁盘中的 zip 包并安装
     # 检查命令是否存在
-    if ! std_cmd_exists unzip; then
-      std_prtmsg "ERROR" "command not found: \"unzip\""
+    if ! setup_cmd_exists unzip; then
+      setup_prtmsg ERROR "command not found: \"unzip\""
       exit 255
     fi
 
@@ -83,7 +107,7 @@ EOF
     read -rp "Please input the absolute path of installation zip package (by default is $(pwd)/master.zip): " zip_file
     [[ -z "${zip_file}" ]] && zip_file="$(pwd)/master.zip"
     if [[ ! -f "${zip_file}" ]]; then
-      std_prtmsg "ERROR" "file not found: \"${zip_file}\""
+      setup_prtmsg ERROR "file not found: \"${zip_file}\""
       exit 255
     fi
 
@@ -92,7 +116,7 @@ EOF
 
     if [[ -n "${install_dir}" ]]; then
       if [[ -e "${install_dir}" && ! -d "${install_dir}" ]]; then
-        std_prtmsg "ERROR" "is not a directory: \"${install_dir}\""
+        setup_prtmsg ERROR "is not a directory: \"${install_dir}\""
         exit 255
       fi
       [[ ! -e "${install_dir}" ]] && mkdir -p "${install_dir}"
@@ -121,13 +145,13 @@ done
 
     chmod a+x ${ubct_cmd}
 
-    std_prtmsg "DONE" "UBCT installed successfully"
+    setup_prtmsg DONE "UBCT installed successfully"
     ;;
   0) # 退出
     exit
     ;;
   *)
-    std_prtmsg "ERROR" "invalid input: \"${choice}\""
+    setup_prtmsg ERROR "invalid input: \"${choice}\""
     ;;
   esac
 done
