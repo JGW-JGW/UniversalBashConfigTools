@@ -368,5 +368,5 @@ function std_check_scheduler_status() {
 
 # check whether a fs exists by its mount point
 function std_fs_check() {
-
+  echo
 }
