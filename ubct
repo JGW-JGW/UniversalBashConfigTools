@@ -36,11 +36,12 @@ EOF
 
 # show version
 function ubct_show_version() {
+  local title
   title="==== Universal Bash Config Tools $(std_get_conf "UBCT_VERSION" "${UBCT_CONF}") ===="
 
-  len_total=${#title}
-  len_left=15
-  len_right=$((len_total - len_left))
+  local len_total=${#title}
+  local len_left=15
+  local len_right=$((len_total - len_left))
 
   printf "%s\n" "${title}"
   printf "%-${len_left}s%${len_right}s\n" "OS:" "${OS_ID}-${OS_VERSION_ID}"
@@ -139,6 +140,7 @@ while true; do
     exit 0
     ;;
   --)
+    ubct_show_version
     break
     ;;
   *)
