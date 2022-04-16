@@ -11,7 +11,7 @@ UBCT_PATH=$(dirname "$(readlink -f "$0")")
 function ubct_show_help() {
   echo
   std_prtline -c= -l66
-  std_prtline -l66 -t"Universal Bash Config Tools"
+  std_prtline -l66 -t"Universal Bash Config Tools $(std_get_conf "UBCT_VERSION" "${UBCT_CONF}")"
   std_prtline -c= -l66
   cat <<'EOF'
   

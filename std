@@ -366,7 +366,64 @@ function std_check_scheduler_status() {
   esac
 }
 
-# check whether a fs exists by its mount point
+# verify a fs by its mount point, size and type
 function std_fs_check() {
-  echo
+  if ! parameters=$(getopt -o m:s:t: --long mount_point:,size:,type: -n "$0" -- "$@"); then
+    return 1
+  fi
+
+  eval set -- "${parameters}"
+
+  local input_mp real_size real_type result input_size input_type
+
+  while true; do
+    case $1 in
+    -m | --mount_point)
+      input_mp="$2"
+      result=$(df -Tm | grep "${input_mp}$")
+      if [[ -z ${result} ]]; then # mp is not a fs
+        if [[ -e ${input_mp} ]]; then
+          std_prtmsg STDERR "mount point exists but is NOT a filesystem: \"${input_mp}\""
+          return 1
+        else
+          std_prtmsg STDERR "mount point does NOT exist: \"${input_mp}\""
+          return 2
+        fi
+      fi
+      # reaching here means mp is a fs
+      real_size=$(echo "${result}" | awk '{print $3}')
+      real_type=$(echo "${result}" | awk '{print $2}')
+      shift 2
+      ;;
+    -s | --size)
+      input_size="$2"
+      if ! std_size_translate "${input_size}" 1>/dev/null 2>/dev/null; then
+        std_prtmsg STDERR "invalid size: \"${input_size}\""
+        return 3
+      fi
+      # reaching here means input size is valid
+      input_size=$(std_size_translate "${input_size}")
+      shift 2
+      ;;
+    -t | --type)
+      input_type="$2"
+      shift 2
+      ;;
+    --)
+      break
+      ;;
+    esac
+  done
+
+  if [[ ${real_size} -lt ${input_size} ]]; then
+    std_prtmsg STDERR "\"${input_mp}\": current size is ${real_size} MB, required size is ${input_size} MB"
+    return 4
+  fi
+
+  if [[ "${real_type}" != "${input_type}" ]]; then
+    std_prtmsg STDERR "\"${input_mp}\": current type is \"${real_type}\", required type is \"${input_type}\""
+    return 5
+  fi
+
+  return 0
 }
