@@ -28,15 +28,18 @@ function std_prtmsg() {
   STDERR | STDERROR)
     echo -e "---- \e[47;30;5mERROR\e[0m\c"
     ;;
-  FUNCBEG)
+  FUNCBEGIN | FUNCSTART)
     echo -e "======== \e[40;31;1m${FUNCNAME[1]} \e[47;30mSTART\e[0m\c"
     ;;
   FUNCEND)
     echo -e "======== \e[40;31;1m${FUNCNAME[1]} \e[47;30mEND\e[0m\c"
     ;;
-    #  FUNCERR | FUNCERROR)
-    #    echo
-    #    ;;
+  FUNCERR | FUNCERROR)
+    echo -e "==== \e[40;31;1m${FUNCNAME[1]} \e[47;30;5mERROR\e[0m\c"
+    ;;
+  FUNCINFO)
+    echo -e "==== \e[40;31;1m${FUNCNAME[1]} \e[0mINFO\c"
+    ;;
   *)
     echo -e "ERROR: unknown type: \"${type}\""
     return 1
@@ -221,24 +224,24 @@ function std_backup_dir() {
   fi
 }
 
+# get value of a specific section inside a config file
+# ======================
+# [section_A]
+# key_1 = 1
+# key_2 = 2
+# # comment
+#
+# [section_B]
+# var_a a
+# var_b b
+# [END]
+# ======================
+# usage: std_get_section_conf section_A filename.conf
+# ======================
+# omit comments and blank lines, returning:
+# key_1 = 1
+# key_2 = 2
 function std_get_section_conf() {
-  # get value of a specific section inside a config file
-  # ======================
-  # [section_A]
-  # key_1 = 1
-  # key_2 = 2
-  # # comment
-  #
-  # [section_B]
-  # var_a a
-  # var_b b
-  # [END]
-  # ======================
-  # usage: std_get_section_conf section_A filename.conf
-  # ======================
-  # omit comments and blank lines, returning:
-  # key_1 = 1
-  # key_2 = 2
   local section_name="$1"
   local conf_file="$2"
 
@@ -275,4 +278,95 @@ function std_fstab_check() {
   done
 
   return ${flag}
+}
+
+function std_size_translate() {
+  local input_size="$1"
+
+  if [[ "${input_size}" =~ [0-9]+(MB|M)?$ ]]; then
+    input_size=${input_size%M*}
+    echo "${input_size%.*}"
+    return 0
+  elif [[ "${input_size}" =~ [0-9]+(GB|G)$ ]]; then
+    input_size=${input_size%G*}
+    input_size=$((input_size * 1024))
+    echo "${input_size%.*}"
+    return 0
+  elif [[ "${input_size}" =~ [0-9]+(TB|T)$ ]]; then
+    input_size=${input_size%T*}
+    input_size=$((input_size * 1048576))
+    echo "${input_size%.*}"
+    return 0
+  elif [[ "${input_size}" =~ [0-9]+(KB|K) ]]; then
+    input_size=${input_size%K*}
+    input_size=$((input_size / 1024))
+    echo "${input_size%.*}"
+    return 0
+  else
+    std_prtmsg STDERR "invalid size: \"${input_size}\""
+    return 1
+  fi
+}
+
+function std_get_pv_free_space() {
+  local pv_name="$1"
+  std_size_translate "$(parted "${pv_name}" print free | grep "Free Space" | tail -1 | awk '{print $3}')"
+}
+
+function std_get_pv_part_num() {
+  local pv_name="$1"
+  parted "${pv_name}" print | grep -Ec "^[[:space:]]*[0-9]+"
+}
+
+function std_generate_fs_type() {
+  case ${OS_FULL_NAME} in
+  centos-7)
+    echo xfs
+    return 0
+    ;;
+  *)
+    echo NULL
+    return 1
+    ;;
+  esac
+}
+
+function std_get_dev_scheduler() {
+  local dev_name="$1"
+  local file="/sys/block/${dev_name}/queue/scheduler"
+  if std_is_there "\[.+\]" "${file}"; then
+    cut -d[ -f2 "${file}" | cut -d] -f1
+    return 0
+  else
+    echo "NULL"
+    return 1
+  fi
+}
+
+function std_check_scheduler_status() {
+  local scheduler
+  case ${OS_FULL_NAME} in
+  centos-7)
+    for dev in $(lsblk -S | awk '/^sd/ {print $1}'); do
+      scheduler=$(std_get_dev_scheduler ${dev})
+      if [[ ${dev} == sda && ${scheduler} != cfq ]]; then
+        std_prtmsg STDERR "scheduler unfitted: device=\"${dev}\", required=\"cfq\", current=\"${scheduler}"
+        return 1
+      elif [[ ${dev} != sda && ${scheduler} != none ]]; then
+        std_prtmsg STDERR "scheduler unfitted: device=\"${dev}\", required=\"none\", current=\"${scheduler}"
+        return 2
+      fi
+    done
+    return 0
+    ;;
+  *)
+    std_prtmsg STDERR "unsupported os: \"${OS_FULL_NAME}\""
+    return 3
+    ;;
+  esac
+}
+
+# check whether a fs exists by its mount point
+function std_fs_check() {
+
 }

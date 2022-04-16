@@ -1,39 +1,43 @@
 #!/bin/bash
 UBCT_PATH=$(dirname "$(readlink -f "$0")")
 
-# shellcheck source=./std
+# shellcheck source=./std disable=SC1094
 . "${UBCT_PATH}"/std
 
 # shellcheck source=./init
 . "${UBCT_PATH}"/init
 
-# 识别参数并执行
-# bashsupport disable=GrazieInspection
-case "$1" in
--h | --help | help)
+# show help
+function ubct_show_help() {
+  echo
+  std_prtline -c= -l70
+  std_prtline -l70 -t"Universal Bash Config Tools"
+  std_prtline -c= -l70
   cat <<'EOF'
-Name: Universal Bash Config Tools
-Usage: ubct [MODULE] [OPTION] [ARGUMENT]...
+  
+Usage: ubct OPTION... [ARGUMENT]...
 
 Basic:
-  ubct                        print version information and exit
-  ubct -V, --version          print version information and exit
-  ubct -h, --help             display this help and exit
-  ubct -u, --update           download from GitHub and reinstall
+  -V, --version             print version information and exit
+  -h, --help                display this help and exit
+  -u, --update              download from GitHub and reinstall
 
 Config:
-  ubct config os              auto-detect os and configure it
-  ubct config suse            config suse
+      --config              auto-detect os and configure it
 
 Verify:
-  ubct verify os              auto-detect os and verify its config
-  ubct verify suse            verify suse
+      --verify              auto-detect os and verify its config
 
 EOF
-  exit 0
-  ;;
-"" | -V | --version)
+  echo
+
+  return 0
+}
+
+# show version
+function ubct_show_version() {
   title="==== Universal Bash Config Tools $(std_get_conf "UBCT_VERSION" "${UBCT_CONF}") ===="
+
   len_total=${#title}
   len_left=15
   len_right=$((len_total - len_left))
@@ -45,42 +49,55 @@ EOF
   printf "%-${len_left}s%${len_right}s\n" "CPU(s):" "${CPU_NUM}"
   printf "%-${len_left}s%${len_right}s\n" "Architecture:" "${CPU_TYPE}"
   printf "%-${len_left}s%${len_right}s\n" "Total Memory:" "${MEM_SIZE_GB} GB"
-  std_prtline -c "=" -l "${len_total}"
+  std_prtline -c= -l"${len_total}"
+  std_prtline -t"Try \"ubct -h\" for more."
   echo
-  exit 0
-  ;;
--u | --update)
+
+  return 0
+}
+
+# online update (download from GitHub)
+function ubct_update() {
+  std_prtmsg FUNCSTART
+
   # 检查命令是否存在
+  std_prtmsg FUNCINFO "checking command..."
   for command in curl unzip; do
     if ! type "${command}" 1>/dev/null 2>/dev/null; then
-      std_prtmsg "ERROR" "command not found: \"${command}\""
+      std_prtmsg FUNCERR "command not found: \"${command}\""
+      std_prtmsg FUNCEND
       exit 255
     fi
   done
 
   # 获取安装路径和旧版本号
-  install_dir=${UBCT_PATH}
+  std_prtmsg FUNCINFO "getting old info..."
+  local install_dir=${UBCT_PATH}
+  local old_version
   old_version=$(std_get_conf UBCT_VERSION "${UBCT_PATH}"/ubct.conf)
-
-  destiny_url="https://github.com/JGW-JGW/UniversalBashConfigTools/archive/refs/heads/master.zip"
-
+  local destiny_url="https://github.com/JGW-JGW/UniversalBashConfigTools/archive/refs/heads/master.zip"
+  local zip_name
   zip_name="$(basename ${destiny_url})"
 
+  std_prtmsg FUNCINFO "downloading package..."
+
   curl -L -o "${install_dir}/${zip_name}" ${destiny_url}
+
+  std_prtmsg FUNCINFO "installing..."
 
   unzip -o "${install_dir}/${zip_name}" -d "${install_dir}" || exit 255
 
   rm -f "${install_dir}/${zip_name}"
 
-  dir_name="UniversalBashConfigTools-master"
+  local dir_name="UniversalBashConfigTools-master"
 
   mv "${install_dir}"/${dir_name}/* "${install_dir}"
 
   rmdir "${install_dir}/${dir_name}"
 
-  ubct_cmd="/usr/bin/ubct"
-  ubct_completion="/etc/bash_completion.d/ubct-completion.sh"
-  ubct_conf="/etc/ubct.conf"
+  local ubct_cmd="/usr/bin/ubct"
+  local ubct_completion="/etc/bash_completion.d/ubct-completion.sh"
+  local ubct_conf="/etc/ubct.conf"
 
   for link in ${ubct_cmd} ${ubct_completion} ${ubct_conf}; do
     [[ -L ${link} ]] && rm -f ${link}
@@ -91,12 +108,42 @@ EOF
 
   chmod a+x ${ubct_cmd}
 
+  local new_version
   new_version=$(std_get_conf UBCT_VERSION "${UBCT_PATH}"/ubct.conf)
 
-  std_prtmsg "DONE" "UBCT updated successfully, from ${old_version} to ${new_version}"
-  ;;
-*)
-  std_prtmsg "ERROR" "invalid option: \"$1\", try \"ubct -h\""
-  exit 255
-  ;;
-esac
+  std_prtmsg FUNCEND "UBCT updated: ${old_version} --> ${new_version}"
+
+  return 0
+}
+
+# 识别参数并执行
+if ! parameters=$(getopt -o hVu --long help,version,update,config,verify -n "$0" -- "$@"); then
+  ubct_show_version
+  exit 1
+fi
+
+eval set -- "${parameters}"
+
+while true; do
+  case "$1" in
+  -h | --help)
+    ubct_show_help
+    exit 0
+    ;;
+  -V | --version)
+    ubct_show_version
+    exit 0
+    ;;
+  -u | --update)
+    ubct_update
+    exit 0
+    ;;
+  --)
+    break
+    ;;
+  *)
+    std_prtmsg ERROR "invalid option: \"$1\""
+    exit 1
+    ;;
+  esac
+done

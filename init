@@ -16,3 +16,4 @@ MEM_SIZE_KB=$(grep "MemTotal:" /proc/meminfo | grep -Eo "[0-9]+")
 MEM_SIZE_GB=$(echo "scale=2; ${MEM_SIZE_KB} / 1048576" | bc)
 OS_ID=$(std_get_conf "ID" /etc/os-release)
 OS_VERSION_ID=$(std_get_conf "VERSION_ID" /etc/os-release)
+OS_FULL_NAME=${OS_ID}-${OS_VERSION_ID}
