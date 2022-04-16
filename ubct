@@ -10,9 +10,9 @@ UBCT_PATH=$(dirname "$(readlink -f "$0")")
 # show help
 function ubct_show_help() {
   echo
-  std_prtline -c= -l70
-  std_prtline -l70 -t"Universal Bash Config Tools"
-  std_prtline -c= -l70
+  std_prtline -c= -l66
+  std_prtline -l66 -t"Universal Bash Config Tools"
+  std_prtline -c= -l66
   cat <<'EOF'
   
 Usage: ubct OPTION... [ARGUMENT]...
@@ -29,7 +29,6 @@ Verify:
       --verify              auto-detect os and verify its config
 
 EOF
-  echo
 
   return 0
 }
@@ -37,13 +36,16 @@ EOF
 # show version
 function ubct_show_version() {
   local title
-  title="==== Universal Bash Config Tools $(std_get_conf "UBCT_VERSION" "${UBCT_CONF}") ===="
+  title="Universal Bash Config Tools $(std_get_conf "UBCT_VERSION" "${UBCT_CONF}")"
 
-  local len_total=${#title}
+  local len_total=$((${#title} + 8))
   local len_left=15
   local len_right=$((len_total - len_left))
 
-  printf "%s\n" "${title}"
+  echo
+  std_prtline -c= -l"${len_total}"
+  std_prtline -l"${len_total}" -t"${title}"
+  std_prtline -c= -l"${len_total}"
   printf "%-${len_left}s%${len_right}s\n" "OS:" "${OS_ID}-${OS_VERSION_ID}"
   printf "%-${len_left}s%${len_right}s\n" "Manufacturer:" "${MANUFACTURER}"
   printf "%-${len_left}s%${len_right}s\n" "Product Name:" "${PRODUCT_NAME}"
@@ -51,7 +53,7 @@ function ubct_show_version() {
   printf "%-${len_left}s%${len_right}s\n" "Architecture:" "${CPU_TYPE}"
   printf "%-${len_left}s%${len_right}s\n" "Total Memory:" "${MEM_SIZE_GB} GB"
   std_prtline -c= -l"${len_total}"
-  std_prtline -t"Try \"ubct -h\" for more."
+  std_prtline -t"Try \"ubct -h\" for more." -l"${len_total}"
   echo
 
   return 0
