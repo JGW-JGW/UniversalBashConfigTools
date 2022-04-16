@@ -68,6 +68,8 @@ EOF
 
     . ${ubct_completion}
 
+    chmod a+x ${ubct_cmd}
+
     std_prtmsg "DONE" "UBCT installed successfully"
     ;;
   2) # 指定本地磁盘中的 zip 包并安装
@@ -116,6 +118,8 @@ EOF
 done
 
     . ${ubct_completion}
+
+    chmod a+x ${ubct_cmd}
 
     std_prtmsg "DONE" "UBCT installed successfully"
     ;;

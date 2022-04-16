@@ -89,6 +89,8 @@ EOF
 
   . ${ubct_completion}
 
+  chmod a+x ${ubct_cmd}
+
   new_version=$(std_get_conf UBCT_VERSION "${UBCT_PATH}"/ubct.conf)
 
   std_prtmsg "DONE" "UBCT updated successfully, from ${old_version} to ${new_version}"
