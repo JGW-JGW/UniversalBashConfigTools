@@ -28,6 +28,7 @@ Config:
 Verify:
   ubct verify os              auto-detect os and verify its config
   ubct verify suse            verify suse
+
 EOF
   exit 0
   ;;

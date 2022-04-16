@@ -22,6 +22,21 @@ function std_prtmsg() {
   INFO)
     echo -e "${type}\c"
     ;;
+  STDINFO)
+    echo -e "---- INFO\c"
+    ;;
+  STDERR | STDERROR)
+    echo -e "---- \e[47;30;5mERROR\e[0m\c"
+    ;;
+  FUNCBEG)
+    echo -e "======== \e[40;31;1m${FUNCNAME[1]} \e[47;30mSTART\e[0m\c"
+    ;;
+  FUNCEND)
+    echo -e "======== \e[40;31;1m${FUNCNAME[1]} \e[47;30mEND\e[0m\c"
+    ;;
+    #  FUNCERR | FUNCERROR)
+    #    echo
+    #    ;;
   *)
     echo -e "ERROR: unknown type: \"${type}\""
     return 1
@@ -51,7 +66,7 @@ function std_prtline() {
     -c | --char)
       char="$2"
       if [[ ${#char} -ne 1 ]]; then
-        std_prtmsg "ERROR" "invalid argument for -c/--char: \"${char}\""
+        std_prtmsg STDERR "invalid argument for -c/--char: \"${char}\""
         return 1
       fi
       shift 2
@@ -68,7 +83,7 @@ function std_prtline() {
       break
       ;;
     *)
-      std_prtmsg "ERROR" "invalid option: \"$1\""
+      std_prtmsg STDERR "invalid option: \"$1\""
       return 1
       ;;
     esac
@@ -77,7 +92,7 @@ function std_prtline() {
   local len_title=${#title}
 
   if [[ $((len_total - len_title)) -lt 4 ]]; then
-    std_prtmsg "ERROR" "invalid value: total length should be greater than length of title by at least 4, current len_total = ${len_total}, len_title = ${len_title}"
+    std_prtmsg STDERR "invalid value: total length should be greater than length of title by at least 4, current len_total = ${len_total}, len_title = ${len_title}"
     return 1
   fi
 
@@ -122,10 +137,142 @@ function std_get_conf() {
   local line value
 
   line=$(grep -E "^[[:space:]]*${var}([[:space:]]+|[[:space:]]*=)" "${file}" | tail -1)
-  
+
   if [[ ${line} =~ '=' ]]; then
     eval echo "$(std_strip "$(echo "${line}" | awk -F= '{print $2}')")"
   else
     eval echo "$(std_strip "$(echo "${line}" | awk '{print $2}')")"
   fi
+}
+
+function std_is_there() {
+  local judge=$1
+  local location=$2
+  [[ -z "${judge}" ]] && return 1
+  [[ -z "${location}" ]] && return 2
+  [[ ! -f "${location}" ]] && return 3
+  grep -qE "${judge}" "${location}" && return 0 || return 4
+}
+
+function std_cmd_exists() {
+  local cmd=$1
+  type "${cmd}" 1>/dev/null 2>/dev/null && return 0 || return 1
+}
+
+function std_backup_file() {
+  local current_time origin_file origin_dirname origin_filename backup_dirname backup_file
+  current_time=$(date "+%Y-%m-%d_%H_%M_%S")
+  origin_file=$*
+  origin_dirname=$(dirname "$*")
+  origin_filename=$(basename "$*")
+  backup_dirname=/tmp/ubct_backup${origin_dirname}
+  backup_file=${backup_dirname}/${origin_filename}.bak.${current_time}
+
+  [[ ! -d ${backup_dirname} ]] && mkdir -p "${backup_dirname}"
+
+  std_prtmsg STDINFO "try to backup a file: \"${origin_file}\""
+
+  if [[ -f ${origin_file} ]]; then
+    if [[ -f ${backup_file} ]]; then
+      std_prtmsg STDINFO "\"${origin_file}\" ALREADY backup as \"${backup_file}\""
+      return 0
+    else
+      cp -p "${origin_file}" "${backup_file}"
+      std_prtmsg STDINFO "\"${origin_file}\" backup as \"${backup_file}\""
+      return 0
+    fi
+  elif [[ -d ${origin_dirname} ]]; then
+    echo "# Before backup, \"${origin_file}\" does NOT exist." >"${backup_file}"
+    std_prtmsg STDINFO "backup an EMPTY file \"${backup_file}\" since \"${origin_file}\" does NOT exist"
+    return 0
+  else
+    std_prtmsg STDERR "\"${origin_dirname}\" is NOT a directory"
+    return 1
+  fi
+}
+
+function std_backup_dir() {
+  local current_time origin_dir
+  current_time=$(date "+%Y-%m-%d_%H_%M_%S")
+  origin_dir=$(dirname "$*")/$(basename "$*")
+  if [[ ! -d ${origin_dir} ]]; then
+    std_prtmsg STDERR "\"${origin_dir}\" is NOT a directory"
+    return 1
+  fi
+  local backup_dir base_dir parent_dir
+  backup_dir=/tmp/ubct_backup${origin_dir}.${current_time}
+  base_dir=$(basename "${origin_dir}")
+  parent_dir=$(dirname "${backup_dir}")
+
+  std_prtmsg STDINFO "try to backup a directory: \"${origin_dir}\""
+
+  if [[ ! -e ${backup_dir} ]]; then
+    mkdir -p "${parent_dir}"
+    cp -frp "${origin_dir}" "${parent_dir}"
+    mv "${parent_dir}/${base_dir}" "${backup_dir}"
+    std_prtmsg STDINFO "\"${origin_dir}\" backup as \"${backup_dir}\""
+    return 0
+  elif [[ -d ${backup_dir} ]]; then
+    std_prtmsg STDINFO "\"${origin_dir}\" ALREADY backup as \"${backup_dir}\""
+    return 0
+  else
+    std_prtmsg STDERR "\"${backup_dir}\" is NOT a directory"
+    return 1
+  fi
+}
+
+function std_get_section_conf() {
+  # get value of a specific section inside a config file
+  # ======================
+  # [section_A]
+  # key_1 = 1
+  # key_2 = 2
+  # # comment
+  #
+  # [section_B]
+  # var_a a
+  # var_b b
+  # [END]
+  # ======================
+  # usage: std_get_section_conf section_A filename.conf
+  # ======================
+  # omit comments and blank lines, returning:
+  # key_1 = 1
+  # key_2 = 2
+  local section_name="$1"
+  local conf_file="$2"
+
+  sed -n "/^[[:space:]]*\[${section_name}\][[:space:]]*$/,/^[[:space:]]*\[/ {/^[[:space:]]*\[${section_name}\][[:space:]]*$\|^[[:space:]]*\[/!p;}" "${conf_file}" | grep -Ev "^[[:space:]]*$|^[[:space:]]*#.*$"
+}
+
+# shellcheck disable=SC2207
+function std_fstab_check() {
+  local n_fstab fs_list_fstab type_list_fstab fs type_df flag
+  fs_list_fstab=($(grep -Ev "^[[:space:]]*#|^[[:space:]]*$" /etc/fstab | awk '{print $2}'))
+  type_list_fstab=($(grep -Ev "^[[:space:]]*#|^[[:space:]]*$" /etc/fstab | awk '{print $3}'))
+  n_fstab=${#fs_list_fstab[@]}
+
+  flag=0
+
+  for ((i = 0; i < n_fstab; i++)); do
+    case ${fs_list_fstab[i]} in
+    swap | none | /sys | /sys/* | /proc | /proc/* | /dev | /dev/*)
+      continue
+      ;;
+    esac
+
+    [[ "${fs_list_fstab[i]}" != "/" ]] && fs=${fs_list_fstab[i]%/} || fs=${fs_list_fstab[i]}
+
+    type_df=$(df -Th | grep -E "[[:space:]]+${fs}$" | awk '{print $2}')
+
+    if [[ -z "${type_df}" ]]; then # fs not found in df -Th
+      flag=1
+      std_prtmsg STDERR "mount point \"${fs}\" NOT found in df -Th"
+    elif [[ "${type_list_fstab[i]}" != "${type_df}" ]]; then
+      flag=1
+      std_prtmsg STDERR "mount point \"${fs}\" has different types in fstab and df command: ${type_list_fstab[i]} VS ${type_df}"
+    fi
+  done
+
+  return ${flag}
 }

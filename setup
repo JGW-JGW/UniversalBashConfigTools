@@ -22,7 +22,7 @@ EOF
   1) # 从 GitHub 上下载 zip 包并安装
     # 检查命令是否存在
     for command in curl unzip; do
-      if ! type "${command}" 1>/dev/null 2>/dev/null; then
+      if ! std_cmd_exists ${command}; then
         std_prtmsg "ERROR" "command not found: \"${command}\""
         exit 255
       fi
@@ -71,6 +71,12 @@ EOF
     std_prtmsg "DONE" "UBCT installed successfully"
     ;;
   2) # 指定本地磁盘中的 zip 包并安装
+    # 检查命令是否存在
+    if ! std_cmd_exists unzip; then
+      std_prtmsg "ERROR" "command not found: \"unzip\""
+      exit 255
+    fi
+
     # 输入 zip 包的绝对路径
     read -rp "Please input the absolute path of installation zip package (by default is $(pwd)/master.zip): " zip_file
     [[ -z "${zip_file}" ]] && zip_file="$(pwd)/master.zip"
