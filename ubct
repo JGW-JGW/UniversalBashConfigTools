@@ -1,32 +1,46 @@
 #!/bin/bash
-UBCT_PATH=$(dirname "$(readlink -f "$0")")
-
-# shellcheck source=./std disable=SC1094
-. "${UBCT_PATH}"/std
+# shellcheck disable=SC2068
+UBCT_DIR=$(dirname "$(readlink -f "$0")")
 
 # shellcheck source=./init
-. "${UBCT_PATH}"/init
+. "${UBCT_DIR}"/init
+
+# shellcheck source=./std
+. "${UBCT_STD}"
+
+# shellcheck source=./config/baseline/common/universal.sh
+. "${UBCT_CONFIG_DIR}"/baseline/common/universal.sh
+
+# shellcheck source=./config/baseline/sles-11.4.sh
+# shellcheck source=./config/baseline/sles-12.5.sh
+# shellcheck source=./config/baseline/neokylin-V7.0.sh
+# shellcheck source=./config/baseline/kylin-V10.sh
+# shellcheck source=./config/baseline/centos-7.sh
+. "${UBCT_CONFIG_DIR}"/baseline/"${OS_FULL_NAME}".sh
+
+# shellcheck source=./config/control
+. "${UBCT_CONFIG_DIR}"/control
 
 # show help
 function ubct_show_help() {
   echo
   std_prtline -c= -l66
-  std_prtline -l66 -t"Universal Bash Config Tools $(std_get_conf "UBCT_VERSION" "${UBCT_CONF}")"
+  std_prtline -t"Universal Bash Config Tools $(init_get_conf "UBCT_VERSION" "${UBCT_CONF}")" -l66
   std_prtline -c= -l66
   cat <<'EOF'
   
-Usage: ubct OPTION... [ARGUMENT]...
+Usage: ubct [MODULE] {OPTION [ARGUMENT]}...
 
 Basic:
-  -V, --version             print version information and exit
-  -h, --help                display this help and exit
-  -u, --update              download from GitHub and reinstall
+  -V | --version | version              print version information and exit
+  -h | --help|help                      display this help and exit
+  -u | --update | update                download from GitHub and reinstall
 
 Config:
-      --config              auto-detect os and configure it
+  config                                auto-detect os and configure it
 
 Verify:
-      --verify              auto-detect os and verify its config
+  verify                                auto-detect os and verify its config
 
 EOF
 
@@ -36,7 +50,7 @@ EOF
 # show version
 function ubct_show_version() {
   local title
-  title="Universal Bash Config Tools $(std_get_conf "UBCT_VERSION" "${UBCT_CONF}")"
+  title="Universal Bash Config Tools $(init_get_conf "UBCT_VERSION" "${UBCT_CONF}")"
 
   local len_total=$((${#title} + 8))
   local len_left=15
@@ -75,9 +89,9 @@ function ubct_update() {
 
   # 获取安装路径和旧版本号
   std_prtmsg FUNCINFO "getting old info..."
-  local install_dir=${UBCT_PATH}
+  local install_dir=${UBCT_DIR}
   local old_version
-  old_version=$(std_get_conf UBCT_VERSION "${UBCT_PATH}"/ubct.conf)
+  old_version=$(init_get_conf UBCT_VERSION "${UBCT_DIR}"/ubct.conf)
   local destiny_url="https://github.com/JGW-JGW/UniversalBashConfigTools/archive/refs/heads/master.zip"
   local zip_name
   zip_name="$(basename ${destiny_url})"
@@ -112,42 +126,34 @@ function ubct_update() {
   chmod a+x ${ubct_cmd}
 
   local new_version
-  new_version=$(std_get_conf UBCT_VERSION "${UBCT_PATH}"/ubct.conf)
+  new_version=$(init_get_confUBCT_VERSION "${UBCT_DIR}"/ubct.conf)
 
   std_prtmsg FUNCEND "UBCT updated: ${old_version} --> ${new_version}"
 
   return 0
 }
 
-# 识别参数并执行
-if ! parameters=$(getopt -o hVu --long help,version,update,config,verify -n "$0" -- "$@"); then
+case $1 in
+-h | --help | help)
+  ubct_show_help
+  exit 0
+  ;;
+-V | --version | version)
   ubct_show_version
+  exit 0
+  ;;
+-u | --update | update)
+  ubct_update
+  exit 0
+  ;;
+config)
+  shift
+  config_control $@
+  ;;
+verify) ;;
+
+*)
+  std_prtmsg ERROR "invalid module or option: \"$1\""
   exit 1
-fi
-
-eval set -- "${parameters}"
-
-while true; do
-  case "$1" in
-  -h | --help)
-    ubct_show_help
-    exit 0
-    ;;
-  -V | --version)
-    ubct_show_version
-    exit 0
-    ;;
-  -u | --update)
-    ubct_update
-    exit 0
-    ;;
-  --)
-    ubct_show_version
-    break
-    ;;
-  *)
-    std_prtmsg ERROR "invalid option: \"$1\""
-    exit 1
-    ;;
-  esac
-done
+  ;;
+esac

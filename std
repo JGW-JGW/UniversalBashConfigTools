@@ -28,16 +28,16 @@ function std_prtmsg() {
   STDERR | STDERROR)
     echo -e "---- \e[47;30;5mERROR\e[0m\c"
     ;;
-  FUNCBEGIN | FUNCSTART)
+  FUNCBEGIN | FUNCSTART | FS)
     echo -e "======== \e[40;31;1m${FUNCNAME[1]} \e[47;30mSTART\e[0m\c"
     ;;
-  FUNCEND)
+  FUNCEND | FEND)
     echo -e "======== \e[40;31;1m${FUNCNAME[1]} \e[47;30mEND\e[0m\c"
     ;;
-  FUNCERR | FUNCERROR)
+  FUNCERR | FUNCERROR | FERR)
     echo -e "==== \e[40;31;1m${FUNCNAME[1]} \e[47;30;5mERROR\e[0m\c"
     ;;
-  FUNCINFO)
+  FUNCINFO | FINFO)
     echo -e "==== \e[40;31;1m${FUNCNAME[1]} \e[0mINFO\c"
     ;;
   *)
@@ -137,7 +137,7 @@ function std_prtline() {
 function std_get_conf() {
   local var="$1"
   local file="$2"
-  local line value
+  local line
 
   line=$(grep -E "^[[:space:]]*${var}([[:space:]]+|[[:space:]]*=)" "${file}" | tail -1)
 
@@ -148,7 +148,7 @@ function std_get_conf() {
   fi
 }
 
-function std_is_there() {
+function std_amid() {
   local judge=$1
   local location=$2
   [[ -z "${judge}" ]] && return 1
@@ -194,7 +194,7 @@ function std_backup_file() {
   fi
 }
 
-function std_backup_dir() {
+function std_backup_directory() {
   local current_time origin_dir
   current_time=$(date "+%Y-%m-%d_%H_%M_%S")
   origin_dir=$(dirname "$*")/$(basename "$*")
@@ -248,11 +248,83 @@ function std_get_section_conf() {
   sed -n "/^[[:space:]]*\[${section_name}\][[:space:]]*$/,/^[[:space:]]*\[/ {/^[[:space:]]*\[${section_name}\][[:space:]]*$\|^[[:space:]]*\[/!p;}" "${conf_file}" | grep -Ev "^[[:space:]]*$|^[[:space:]]*#.*$"
 }
 
-# shellcheck disable=SC2207
-function std_fstab_check() {
+function std_translate_size() {
+  local input_size="$1"
+
+  if [[ "${input_size}" =~ [0-9]+([Mm]B?)?$ ]]; then
+    input_size=${input_size%M*}
+    input_size=${input_size%m*}
+    echo "${input_size%.*}"
+    return 0
+  elif [[ "${input_size}" =~ [0-9]+[Gg]B?$ ]]; then
+    input_size=${input_size%G*}
+    input_size=${input_size%g*}
+    echo $((${input_size%.*} * 1024))
+    return 0
+  elif [[ "${input_size}" =~ [0-9]+[Tt]B?$ ]]; then
+    input_size=${input_size%T*}
+    input_size=${input_size%t*}
+    echo $((${input_size%.*} * 1048576))
+    return 0
+  elif [[ "${input_size}" =~ [0-9]+[Kk]B?$ ]]; then
+    input_size=${input_size%K*}
+    input_size=${input_size%k*}
+    echo $((${input_size%.*} / 1024))
+    return 0
+  else
+    std_prtmsg STDERR "invalid size: \"${input_size}\""
+    return 1
+  fi
+}
+
+function std_get_pv_free_space() {
+  local pv_name="$1"
+  std_translate_size "$(parted "${pv_name}" print free | grep "Free Space" | tail -1 | awk '{print $3}')"
+}
+
+function std_get_pv_part_num() {
+  local pv_name="$1"
+  parted "${pv_name}" print | grep -Ec "^[[:space:]]*[0-9]+"
+}
+
+function std_get_vg_free_space() {
+  local vg_name="$1"
+  std_translate_size "$(vgs --unit m | awk -v name="${vg_name}" '{if($1==name) {print $NF}}')"
+}
+
+function std_generate_fs_type() {
+  case ${OS_FULL_NAME} in
+  centos-7)
+    echo xfs
+    return 0
+    ;;
+  *)
+    echo NULL
+    return 1
+    ;;
+  esac
+}
+
+function std_get_dev_scheduler() {
+  local dev_name="$1"
+  local file="/sys/block/${dev_name}/queue/scheduler"
+  if std_amid "\[.+\]" "${file}"; then
+    cut -d[ -f2 "${file}" | cut -d] -f1
+    return 0
+  else
+    echo "NULL"
+    return 1
+  fi
+}
+
+function std_check_fstab() {
   local n_fstab fs_list_fstab type_list_fstab fs type_df flag
-  fs_list_fstab=($(grep -Ev "^[[:space:]]*#|^[[:space:]]*$" /etc/fstab | awk '{print $2}'))
-  type_list_fstab=($(grep -Ev "^[[:space:]]*#|^[[:space:]]*$" /etc/fstab | awk '{print $3}'))
+  read -ra fs_list_fstab <<EOF
+$(grep -Ev "^[[:space:]]*#|^[[:space:]]*$" /etc/fstab | awk '{print $2}' | xargs)
+EOF
+  read -ra type_list_fstab <<EOF
+$(grep -Ev "^[[:space:]]*#|^[[:space:]]*$" /etc/fstab | awk '{print $3}' | xargs)
+EOF
   n_fstab=${#fs_list_fstab[@]}
 
   flag=0
@@ -280,75 +352,12 @@ function std_fstab_check() {
   return ${flag}
 }
 
-function std_size_translate() {
-  local input_size="$1"
-
-  if [[ "${input_size}" =~ [0-9]+(MB|M)?$ ]]; then
-    input_size=${input_size%M*}
-    echo "${input_size%.*}"
-    return 0
-  elif [[ "${input_size}" =~ [0-9]+(GB|G)$ ]]; then
-    input_size=${input_size%G*}
-    input_size=$((input_size * 1024))
-    echo "${input_size%.*}"
-    return 0
-  elif [[ "${input_size}" =~ [0-9]+(TB|T)$ ]]; then
-    input_size=${input_size%T*}
-    input_size=$((input_size * 1048576))
-    echo "${input_size%.*}"
-    return 0
-  elif [[ "${input_size}" =~ [0-9]+(KB|K) ]]; then
-    input_size=${input_size%K*}
-    input_size=$((input_size / 1024))
-    echo "${input_size%.*}"
-    return 0
-  else
-    std_prtmsg STDERR "invalid size: \"${input_size}\""
-    return 1
-  fi
-}
-
-function std_get_pv_free_space() {
-  local pv_name="$1"
-  std_size_translate "$(parted "${pv_name}" print free | grep "Free Space" | tail -1 | awk '{print $3}')"
-}
-
-function std_get_pv_part_num() {
-  local pv_name="$1"
-  parted "${pv_name}" print | grep -Ec "^[[:space:]]*[0-9]+"
-}
-
-function std_generate_fs_type() {
-  case ${OS_FULL_NAME} in
-  centos-7)
-    echo xfs
-    return 0
-    ;;
-  *)
-    echo NULL
-    return 1
-    ;;
-  esac
-}
-
-function std_get_dev_scheduler() {
-  local dev_name="$1"
-  local file="/sys/block/${dev_name}/queue/scheduler"
-  if std_is_there "\[.+\]" "${file}"; then
-    cut -d[ -f2 "${file}" | cut -d] -f1
-    return 0
-  else
-    echo "NULL"
-    return 1
-  fi
-}
-
-function std_check_scheduler_status() {
+function std_check_disk_scheduler() {
   local scheduler
   case ${OS_FULL_NAME} in
   centos-7)
     for dev in $(lsblk -S | awk '/^sd/ {print $1}'); do
-      scheduler=$(std_get_dev_scheduler ${dev})
+      scheduler=$(std_get_dev_scheduler "${dev}")
       if [[ ${dev} == sda && ${scheduler} != cfq ]]; then
         std_prtmsg STDERR "scheduler unfitted: device=\"${dev}\", required=\"cfq\", current=\"${scheduler}"
         return 1
@@ -367,7 +376,7 @@ function std_check_scheduler_status() {
 }
 
 # verify a fs by its mount point, size and type
-function std_fs_check() {
+function std_check_filesystem() {
   if ! parameters=$(getopt -o m:s:t: --long mount_point:,size:,type: -n "$0" -- "$@"); then
     return 1
   fi
@@ -397,12 +406,12 @@ function std_fs_check() {
       ;;
     -s | --size)
       input_size="$2"
-      if ! std_size_translate "${input_size}" 1>/dev/null 2>/dev/null; then
+      if ! std_translate_size "${input_size}" 1>/dev/null 2>/dev/null; then
         std_prtmsg STDERR "invalid size: \"${input_size}\""
         return 3
       fi
       # reaching here means input size is valid
-      input_size=$(std_size_translate "${input_size}")
+      input_size=$(std_translate_size "${input_size}")
       shift 2
       ;;
     -t | --type)
@@ -426,4 +435,275 @@ function std_fs_check() {
   fi
 
   return 0
+}
+
+# check whether a filesystem of a certain size (MB) could be created on the specific vg
+function std_check_creation_of_filesystem() {
+  local input_vg_name="$1"
+  local input_size="$2"
+
+  # check validity of input size
+  if ! std_translate_size "${input_size}" 1>/dev/null 2>/dev/null; then
+    std_prtmsg STDERR "invalid size: \"${input_size}\""
+    return 1
+  fi
+  input_size=$(std_translate_size "${input_size}")
+
+  # check whether input vg has enough space of input size
+  local vg_free_space
+  vg_free_space=$(std_get_vg_free_space "${input_vg_name}")
+
+  # if there is enough space of input size, it is able to create this filesystem
+  if [[ ${vg_free_space} -gt ${input_size} ]]; then
+    std_prtmsg STDINFO "filesystem of size ${input_size} MB on vg \"${input_vg_name}\" can be created"
+    return 0
+  fi
+
+  # reaching here means there is not enough space of input vg
+  std_prtmsg STDERR "there is not enough space on vg \"${input_vg_name}\", now checking pv..."
+
+  # get pv list
+  local pv_list
+  pv_list=$(lsblk -dnp | awk '{if($6=="disk") {print $1}}')
+
+  # check which pv has enough space
+  local pv_free_space=0
+  local pv_chosen="NULL"
+  for pv in ${pv_list}; do
+    pv_free_space=$(std_get_pv_free_space "${pv}")
+    if [[ ${pv_free_space} -ge ${input_size} ]]; then
+      pv_chosen=${pv}
+      break
+    fi
+  done
+
+  # return if a proper pv can not be found
+  if [[ ${pv_chosen} == NULL ]]; then
+    std_prtmsg STDERR "there is not enough space on any pv of \"${pv_list}\", please add new pvs"
+    return 2
+  fi
+
+  # if a fitted pv is found, then we will create a new partition
+  # check how many partitions are there in the chosen pv, if > 3 return ERROR
+  local pv_part_num
+  pv_part_num=$(std_get_pv_part_num "${pv_chosen}")
+  if [[ ${pv_part_num} -gt 3 ]]; then
+    std_prtmsg STDERR "too many partitions found for \"${pv_chosen}\": ${pv_part_num} partitions"
+    return 3
+  fi
+
+  # try to create a new partition
+  local start_position choice
+  start_position=$(parted -s "${pv_chosen}" print free | grep "Free Space" | tail -1 | awk '{print $1}')
+  echo
+  parted -s "${pv_chosen}" print free
+  echo
+  echo "command will be executed: parted -s ${pv_chosen} mkpart primary \"${start_position} -1\""
+  read -rp "create a new partition on \"${pv_chosen}\"? (y/n): " choice
+  if [[ ${choice} == y ]]; then
+    parted -s "${pv_chosen}" mkpart primary "${start_position} -1"
+  else
+    std_prtmsg STDERR "cancel creating a new partition on \"${pv_chosen}\" by user"
+    return 4
+  fi
+
+  # get the total number of partitions on the chosen pv
+  pv_part_num=$(std_get_pv_part_num "${pv_chosen}")
+
+  # set the new partition to type lvm
+  parted -s "${pv_chosen}" set "${pv_part_num}" lvm on
+
+  # extend vg
+  vgextend "${input_vg_name}" "${pv_chosen}${pv_part_num}"
+
+  # check whether input vg has enough space of input size
+  vg_free_space=$(std_get_vg_free_space "${input_vg_name}")
+  if [[ ${vg_free_space} -gt ${input_size} ]]; then
+    std_prtmsg STDINFO "filesystem of size ${input_size} MB on vg \"${input_vg_name}\" can be created"
+    return 0
+  else
+    std_prtmsg STDERR "there is not enough space on vg \"${input_vg_name}\", free space is ${vg_free_space} MB, required space is ${input_size} MB"
+    return 5
+  fi
+}
+
+function std_compare_version() {
+  local v1="$1"
+  local v2="$2"
+  local IFS_old="${IFS}"
+  IFS="."
+  read -ra v1 <<EOF
+${v1}
+EOF
+  read -ra v2 <<EOF
+${v2}
+EOF
+  IFS=${IFS_old}
+
+  # 获取数组长度
+  local n1=${#v1[@]}
+  local n2=${#v2[@]}
+  local n
+  [[ ${n1} -lt ${n2} ]] && n=${n1} || n=${n2}
+
+  for ((i = 0; i < n; i++)); do
+    if [[ ${v1[i]} -gt ${v2[i]} ]]; then
+      echo "1"
+      return 0
+    elif [[ ${v1[i]} -lt ${v2[i]} ]]; then
+      echo "-1"
+      return 0
+    fi
+  done
+
+  echo "0"
+  return 0
+}
+
+function std_compare_kernel_version() {
+  local current_kernel_version_main current_kernel_version_sub
+  current_kernel_version_main=$(uname -r | cut -d- -f1)
+  current_kernel_version_sub=$(uname -r | cut -d- -f2)
+  local required_kernel_version="$1"
+  local required_kernel_version_main required_kernel_version_sub
+  required_kernel_version_main=$(echo "${required_kernel_version}" | cut -d- -f1)
+  required_kernel_version_sub=$(echo "${required_kernel_version}" | cut -d- -f2)
+
+  case $(std_compare_version "${current_kernel_version_main}" "${required_kernel_version_main}") in
+  -1)
+    return 1
+    ;;
+  1)
+    return 0
+    ;;
+  0)
+    if [[ $(std_compare_version "${current_kernel_version_sub}" "${required_kernel_version_sub}") -eq -1 ]]; then
+      return 1
+    else
+      return 0
+    fi
+    ;;
+  *)
+    return 2
+    ;;
+  esac
+}
+
+function std_systemctl() {
+  local usage="$1"
+  local service="$2"
+
+  case ${OS_FULL_NAME} in
+  centos-7 | sles-12.3 | sles-12.5 | neokylin-V7.0 | kylinV10)
+    case ${usage} in
+    is-installed)
+      if systemctl status "${service}" 2>&1 | grep -Eq "not-found|No such file or directory|could not be found"; then
+        echo uninstalled
+        return 1
+      else
+        echo installed
+        return 0
+      fi
+      ;;
+    status)
+      systemctl status "${service}" 2>&1
+      ;;
+    is-enabled)
+      if [[ $(systemctl is-enabled "${service}" 2>&1) == enabled ]]; then
+        echo enabled
+        return 0
+      else
+        echo disabled
+        return 1
+      fi
+      ;;
+    is-active)
+      if [[ $(systemctl is-active "${service}" 2>&1) == active ]]; then
+        echo active
+        return 0
+      else
+        echo inactive
+        return 1
+      fi
+      ;;
+    enable)
+      systemctl enable "${service}" 2>&1
+      ;;
+    disable)
+      systemctl disable "${service}" 2>&1
+      ;;
+    stop)
+      systemctl stop "${service}" 2>&1
+      ;;
+    restart)
+      systemctl restart "${service}" 2>&1
+      ;;
+    *)
+      std_prtmsg STDERR "unsupported usage: \"${usage}\""
+      return 2
+      ;;
+    esac
+    ;;
+  sles11.4)
+    case ${usage} in
+    is-installed)
+      if chkconfig -l "${service}" 2>&1 | grep -q "unknown service"; then
+        echo uninstalled
+        return 1
+      else
+        echo installed
+        return 0
+      fi
+      ;;
+    status)
+      chkconfig -l "${service}"
+      service "${service}" status
+      ;;
+    is-enabled)
+      if chkconfig "${service}" 2>&1 | awk '{print $2}' | grep -oq "on"; then
+        echo enabled
+        return 0
+      else
+        echo disabled
+        return 1
+      fi
+      ;;
+    is-active)
+      if service "${service}" status 2>&1 | grep -v "not running" | awk '{print $NF}' | grep -oq "running"; then
+        echo "active"
+        return 0
+      else
+        echo "inactive"
+        return 1
+      fi
+      ;;
+    enable)
+      chkconfig "${service}" on
+      ;;
+    disable)
+      chkconfig "${service}" off
+      ;;
+    start)
+      service "${service}" start
+      rc"${service}" start 2>/dev/null
+      ;;
+    stop)
+      service "${service}" stop
+      rc"${service}" stop 2>/dev/null
+      ;;
+    restart)
+      service "${service}" restart
+      rc"${service}" restart 2>/dev/null
+      ;;
+    *)
+      std_prtmsg STDERR "unsupported usage: \"${usage}\""
+      return 2
+      ;;
+    esac
+    ;;
+  *)
+    std_prtmsg STDERR "unsupported os: \"${OS_FULL_NAME}\""
+    return 3
+    ;;
+  esac
 }
