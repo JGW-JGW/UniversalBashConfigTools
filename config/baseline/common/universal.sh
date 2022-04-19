@@ -173,3 +173,23 @@ function uni_set_system_conf() {
 
   std_prtmsg FEND "DONE"
 }
+
+function uni_set_sysctl_conf() {
+  std_prtmsg FS
+
+  local file="/etc/sysctl.conf"
+
+  if ! std_backup_file ${file}; then
+    std_prtmsg FERR "backup failed, please check info above..."
+    std_prtmsg FEND "ERROR"
+    return 1
+  fi
+
+  if std_amid "^kernel\.shmall[[:space:]]*=.*$" ${file}; then
+    sed -ri "s/^kernel\.shmall[[:space:]]*=.*$/kernel.shmall=$((MEM_SIZE_B * ))/g" ${file}
+  else
+    echo -e "\nkernel.shmall=274877906944" >>${file}
+  fi
+
+  std_prtmsg FEND "DONE"
+}

@@ -26,9 +26,6 @@ function init_standardize() {
   return 0
 }
 
-init_standardize V7.9.2009
-
-
 # UBCT 相关信息
 UBCT_STD=${UBCT_DIR}/std
 UBCT_CONF=${UBCT_DIR}/ubct.conf
@@ -37,10 +34,11 @@ UBCT_CONFIG_DIR=${UBCT_DIR}/config
 # OS 相关信息
 MANUFACTURER=$(init_strip "$(dmidecode -t1 | grep "Manufacturer:" | awk -F: '{print $2}')")
 PRODUCT_NAME=$(init_strip "$(dmidecode -t1 | grep "Product Name:" | awk -F: '{print $2}')")
-CPU_NUM=$(init_strip"$(lscpu | grep -E "^CPU\(s\):" | awk -F: '{print $2}')")
+CPU_NUM=$(init_strip "$(lscpu | grep -E "^CPU\(s\):" | awk -F: '{print $2}')")
 CPU_TYPE=$(uname -m)
 MEM_SIZE_KB=$(grep "MemTotal:" /proc/meminfo | grep -Eo "[0-9]+")
 MEM_SIZE_GB=$(echo "scale=2; ${MEM_SIZE_KB} / 1048576" | bc)
+MEM_SIZE_B=$((MEM_SIZE_KB * 1024))
 OS_ID=$(init_get_conf "ID" /etc/os-release)
 OS_VERSION_ID=$(init_get_conf "VERSION_ID" /etc/os-release)
 OS_FULL_NAME=${OS_ID}-${OS_VERSION_ID}

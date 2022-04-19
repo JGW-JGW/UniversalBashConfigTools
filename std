@@ -5,6 +5,97 @@ function std_strip() {
   return 0
 }
 
+function std_float_cmp() {
+  local f1="${1##*+}"
+  local operator="$2"
+  local f2="${3##*+}"
+
+  case ${operator} in
+  -lt)
+    operator='<'
+    ;;
+  -gt)
+    operator='>'
+    ;;
+  -eq)
+    operator='=='
+    ;;
+  -le)
+    operator='<='
+    ;;
+  -ge)
+    operator='>='
+    ;;
+  -ne)
+    operator='!='
+    ;;
+  esac
+
+  [[ $(echo "${f1} ${operator} ${f2}" | bc) -eq 1 ]] && return 0 || return 1
+}
+
+function std_ceil() {
+  local float="${1##*+}"
+  local cut=${float%%.*}
+
+  if std_float_cmp "${float}" -eq "${cut}"; then
+    std_float_cmp "${cut}" -eq 0 && echo 0 || echo "${cut}"
+    return 0
+  fi
+
+  # 到这里说明截断后的数字和原数字不相等，即原数字不可能为0（0的各种形式都不可能）
+  if std_float_cmp "${float}" -lt 0; then
+    std_float_cmp "${cut}" -eq 0 && echo 0 || echo "${cut}"
+  else # 原数字大于0
+    echo $((cut + 1))
+  fi
+}
+
+function std_floor() {
+  local float="${1##*+}"
+  local cut=${float%%.*}
+
+  if std_float_cmp "${float}" -eq "${cut}"; then
+    std_float_cmp "${cut}" -eq 0 && echo 0 || echo "${cut}"
+    return 0
+  fi
+
+  # 到这里说明截断后的数字和原数字不相等，即原数字不可能为0（0的各种形式都不可能）
+  if std_float_cmp "${float}" -lt 0; then
+    echo $((cut - 1))
+  else # 原数字大于0
+    std_float_cmp "${cut}" -eq 0 && echo 0 || echo "${cut}"
+  fi
+}
+
+function std_round() {
+  local float="${1##*+}"
+
+  if std_float_cmp "${float}" -eq 0; then
+    echo 0
+    return 0
+  fi
+
+  local x floor ceil
+  floor=$(std_floor "${float}")
+  ceil=$(std_ceil "${float}")
+  x=$(echo "${floor} ${ceil}" | awk '{printf("%0.1f\n",($1+$2)/2)}')
+
+  if std_float_cmp "${float}" -gt 0; then
+    if std_float_cmp "${float}" -ge "${x}"; then
+      echo "${ceil}"
+    else
+      echo "${floor}"
+    fi
+  else
+    if std_float_cmp "${float}" -le "${x}"; then
+      echo "${floor}"
+    else
+      echo "${ceil}"
+    fi
+  fi
+}
+
 function std_prtmsg() {
   local type="$1"
   local msg="$2"
@@ -377,6 +468,7 @@ function std_check_disk_scheduler() {
 
 # verify a fs by its mount point, size and type
 function std_check_filesystem() {
+  local parameters
   if ! parameters=$(getopt -o m:s:t: --long mount_point:,size:,type: -n "$0" -- "$@"); then
     return 1
   fi
