@@ -10,5 +10,3 @@ function check_os() {
 
   std_prtmsg FUNCEND "CORRECT"
 }
-
-function
