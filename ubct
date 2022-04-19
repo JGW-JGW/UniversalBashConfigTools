@@ -126,7 +126,7 @@ function ubct_update() {
   chmod a+x ${ubct_cmd}
 
   local new_version
-  new_version=$(init_get_confUBCT_VERSION "${UBCT_DIR}"/ubct.conf)
+  new_version=$(init_get_conf UBCT_VERSION "${UBCT_DIR}"/ubct.conf)
 
   std_prtmsg FUNCEND "UBCT updated: ${old_version} --> ${new_version}"
 

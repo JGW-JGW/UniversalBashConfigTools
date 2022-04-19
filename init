@@ -14,9 +14,9 @@ function init_get_conf() {
   line=$(grep -E "^[[:space:]]*${var}([[:space:]]+|[[:space:]]*=)" "${file}" | tail -1)
 
   if [[ ${line} =~ '=' ]]; then
-    eval echo "$(std_strip "$(echo "${line}" | awk -F= '{print $2}')")"
+    eval echo "$(init_strip "$(echo "${line}" | awk -F= '{print $2}')")"
   else
-    eval echo "$(std_strip "$(echo "${line}" | awk '{print $2}')")"
+    eval echo "$(init_strip "$(echo "${line}" | awk '{print $2}')")"
   fi
 }
 
