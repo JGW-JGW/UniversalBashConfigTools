@@ -165,7 +165,7 @@ case $1 in
   ubct_show_help
   exit 0
   ;;
--V | --version | version)
+-V | --version | version | "")
   ubct_show_version
   exit 0
   ;;
