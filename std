@@ -116,7 +116,7 @@ function std_prtmsg() {
   STDINFO)
     echo -e "---- INFO\c"
     ;;
-  STDERR | STDERROR)
+  STDERROR | STDERR)
     echo -e "---- \e[47;30;5mERROR\e[0m\c"
     ;;
   FUNCBEGIN | FUNCSTART | FS)
@@ -125,10 +125,13 @@ function std_prtmsg() {
   FUNCEND | FEND)
     echo -e "======== \e[40;31;1m${FUNCNAME[1]} \e[47;30mEND\e[0m\c"
     ;;
-  FUNCERR | FUNCERROR | FERR)
+  FUNCERROR | FUNCERR | FERR)
     echo -e "==== \e[40;31;1m${FUNCNAME[1]} \e[47;30;5mERROR\e[0m\c"
     ;;
-  FUNCINFO | FINFO)
+  FUNCWARNING | FWAR | FW)
+    echo -e "==== \e[40;31;1m${FUNCNAME[1]} \e[47;30mWARNING\e[0m\c"
+    ;;
+  FUNCINFO | FINFO | FI)
     echo -e "==== \e[40;31;1m${FUNCNAME[1]} \e[0mINFO\c"
     ;;
   *)
@@ -221,6 +224,26 @@ function std_prtline() {
   done
 
   printf "\n"
+
+  return 0
+}
+
+# 判断一个文件的最后一行到底有没有换行符，应对 echo -e "XXX\c" >>file 的情况
+# 如果有换行，则保持该文件不变；如果没有换行，则增加 1 个换行到该文件中
+function std_fix_file_eof() {
+  local file="$1"
+
+  if [[ ! -f ${file} ]]; then
+    std_prtmsg STDERR "file not found: \"${file}\""
+    return 1
+  fi
+
+  if ! cat -A "${file}" | tail -1 | grep -q "\\\$"; then
+    echo >>"${file}"
+    std_prtmsg STDINFO "file eof fixed: \"${file}\""
+  else
+    std_prtmsg STDINFO "file eof OK, do nothing: \"${file}\""
+  fi
 
   return 0
 }

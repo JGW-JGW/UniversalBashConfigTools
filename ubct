@@ -1,9 +1,12 @@
 #!/bin/bash
 # shellcheck disable=SC2068
-UBCT_DIR=$(dirname "$(readlink -f "$0")")
+UBCT_ROOT_DIR=$(dirname "$(readlink -f "$0")")
+
+# shellcheck source=./ubct.conf
+. "${UBCT_ROOT_DIR}"/ubct.conf
 
 # shellcheck source=./init
-. "${UBCT_DIR}"/init
+. "${UBCT_ROOT_DIR}"/init
 
 # shellcheck source=./std
 . "${UBCT_STD}"
@@ -18,29 +21,49 @@ UBCT_DIR=$(dirname "$(readlink -f "$0")")
 # shellcheck source=./config/baseline/centos-7.sh
 . "${UBCT_CONFIG_DIR}"/baseline/"${OS_FULL_NAME}".sh
 
+# shellcheck source=./config/hostname/config.sh
+. "${UBCT_CONFIG_DIR}"/hostname/config.sh
+
 # shellcheck source=./config/control
 . "${UBCT_CONFIG_DIR}"/control
+
+# shellcheck source=./verify/hostname/verify.sh
+. "${UBCT_VERIFY_DIR}"/hostname/verify.sh
+
+# shellcheck source=./verify/control
+. "${UBCT_VERIFY_DIR}"/control
 
 # show help
 function ubct_show_help() {
   echo
   std_prtline -c= -l66
-  std_prtline -t"Universal Bash Config Tools $(init_get_conf "UBCT_VERSION" "${UBCT_CONF}")" -l66
+  std_prtline -t"Universal Bash Config Tools ${UBCT_VERSION}" -l66
   std_prtline -c= -l66
   cat <<'EOF'
   
 Usage: ubct [MODULE] {OPTION [ARGUMENT]}...
 
 Basic:
-  -V | --version | version              print version information and exit
-  -h | --help|help                      display this help and exit
-  -u | --update | update                download from GitHub and reinstall
+  ubct                                         print version information and exit
+  ubct -V|--version|version                    print version information and exit
+  ubct -h|--help|help                          display this help and exit
+  ubct -u|--update|update                      download from GitHub and reinstall
 
-Config:
-  config                                auto-detect os and configure it
+Config baseline:
+  ubct config baseline                         auto-detect os and configure it
+  ubct config baseline -a|--all                auto-detect os and configure it
+  ubct config baseline -o|--only <FUNCNAME>    if FUNCNAME is a valid configuration of current os, execute it
 
-Verify:
-  verify                                auto-detect os and verify its config
+Verify baseline:
+  ubct verify baseline                         auto-detect os and verify its config
+  ubct verify baseline -a|--all                auto-detect os and verify its config
+  ubct verify baseline -o|--only <ITEMNAME>    if ITEMNAME is a group of valid verifications of current os, verify it 
+
+Change hostname:
+  ubct config hostname <HOSTNAME>              change hostname to HOSTNAME
+
+Verify hostname:
+  ubct verify hostname                         verify hostname
 
 EOF
 
@@ -50,7 +73,7 @@ EOF
 # show version
 function ubct_show_version() {
   local title
-  title="Universal Bash Config Tools $(init_get_conf "UBCT_VERSION" "${UBCT_CONF}")"
+  title="Universal Bash Config Tools ${UBCT_VERSION}"
 
   local len_total=$((${#title} + 8))
   local len_left=15
@@ -60,12 +83,16 @@ function ubct_show_version() {
   std_prtline -c= -l"${len_total}"
   std_prtline -l"${len_total}" -t"${title}"
   std_prtline -c= -l"${len_total}"
-  printf "%-${len_left}s%${len_right}s\n" "OS:" "${OS_ID}-${OS_VERSION_ID}"
+  printf "%-${len_left}s%${len_right}s\n" "OS:" "${OS_FULL_NAME}"
   printf "%-${len_left}s%${len_right}s\n" "Manufacturer:" "${MANUFACTURER}"
   printf "%-${len_left}s%${len_right}s\n" "Product Name:" "${PRODUCT_NAME}"
   printf "%-${len_left}s%${len_right}s\n" "CPU(s):" "${CPU_NUM}"
   printf "%-${len_left}s%${len_right}s\n" "Architecture:" "${CPU_TYPE}"
   printf "%-${len_left}s%${len_right}s\n" "Total Memory:" "${MEM_SIZE_GB} GB"
+  printf "%-${len_left}s%${len_right}s\n" "Hostname:" "${HOSTNAME}"
+  printf "%-${len_left}s%${len_right}s\n" "IPV4 Address:" "${IP_ADDR}"
+  printf "%-${len_left}s%${len_right}s\n" "Location:" "${MACHINE_LOCATION}"
+  printf "%-${len_left}s%${len_right}s\n" "Net Zone:" "${NET_ZONE}"
   std_prtline -c= -l"${len_total}"
   std_prtline -t"Try \"ubct -h\" for more." -l"${len_total}"
   echo
@@ -89,9 +116,9 @@ function ubct_update() {
 
   # 获取安装路径和旧版本号
   std_prtmsg FUNCINFO "getting old info..."
-  local install_dir=${UBCT_DIR}
+  local install_dir=${UBCT_ROOT_DIR}
   local old_version
-  old_version=$(init_get_conf UBCT_VERSION "${UBCT_DIR}"/ubct.conf)
+  old_version=${UBCT_VERSION}
   local destiny_url="https://github.com/JGW-JGW/UniversalBashConfigTools/archive/refs/heads/master.zip"
   local zip_name
   zip_name="$(basename ${destiny_url})"
@@ -126,7 +153,7 @@ function ubct_update() {
   chmod a+x ${ubct_cmd}
 
   local new_version
-  new_version=$(init_get_conf UBCT_VERSION "${UBCT_DIR}"/ubct.conf)
+  new_version=$(std_get_conf UBCT_VERSION "${UBCT_ROOT_DIR}"/ubct.conf)
 
   std_prtmsg FUNCEND "UBCT updated: ${old_version} --> ${new_version}"
 
@@ -150,8 +177,10 @@ config)
   shift
   config_control $@
   ;;
-verify) ;;
-
+verify)
+  shift
+  verify_control $@
+  ;;
 *)
   std_prtmsg ERROR "invalid module or option: \"$1\""
   exit 1
