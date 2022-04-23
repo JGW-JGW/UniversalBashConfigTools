@@ -125,6 +125,7 @@ function config_centos_7() {
       # filesystem config
       # TODO
 
+      break
       ;;
     -o | --only)
       local valid_functions funcname
@@ -167,4 +168,6 @@ EOF
       ;;
     esac
   done
+
+  std_prtmsg FEND "DONE"
 }

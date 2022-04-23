@@ -7,10 +7,15 @@ function uni_set_timezone() {
       std_prtmsg FERR "check info above..."
       std_prtmsg FEND "ERROR"
       return 1
+    else
+      std_prtmsg FINFO "timezone is set to Asia/Beijing"
+      std_prtmsg FEND "DONE"
+      return 0
     fi
+  else
+    std_prtmsg FEND "CORRECT"
+    return 0
   fi
-
-  std_prtmsg FEND "DONE"
 }
 
 function uni_set_default_target() {
@@ -21,7 +26,14 @@ function uni_set_default_target() {
       std_prtmsg FERR "check info above..."
       std_prtmsg FEND "ERROR"
       return 1
+    else
+      std_prtmsg FINFO "default target is set to \"graphical.target\""
+      std_prtmsg FEND "DONE"
+      return 0
     fi
+  else
+    std_prtmsg FEND "CORRECT"
+    return 0
   fi
 
   std_prtmsg FEND "DONE"

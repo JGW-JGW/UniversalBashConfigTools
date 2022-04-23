@@ -234,15 +234,15 @@ function std_fix_file_eof() {
   local file="$1"
 
   if [[ ! -f ${file} ]]; then
-    std_prtmsg STDERR "file not found: \"${file}\""
-    return 1
+    std_prtmsg STDINFO "file not found: \"${file}\", do nothing..."
+    return 0
   fi
 
   if ! cat -A "${file}" | tail -1 | grep -q "\\\$"; then
     echo >>"${file}"
     std_prtmsg STDINFO "file eof fixed: \"${file}\""
   else
-    std_prtmsg STDINFO "file eof OK, do nothing: \"${file}\""
+    std_prtmsg STDINFO "file eof OK: \"${file}\", do nothing..."
   fi
 
   return 0
