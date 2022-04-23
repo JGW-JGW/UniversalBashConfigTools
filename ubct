@@ -136,8 +136,10 @@ function ubct_update() {
   local dir_name="UniversalBashConfigTools-master"
 
   mv "${install_dir}"/${dir_name}/* "${install_dir}"
+  
+  cp -rpf "${install_dir}"/${dir_name}/* "${install_dir}"
 
-  rmdir "${install_dir}/${dir_name}"
+  rm -rf "${install_dir:?}/${dir_name}"
 
   local ubct_cmd="/usr/bin/ubct"
   local ubct_completion="/etc/bash_completion.d/ubct-completion.sh"
