@@ -26,15 +26,21 @@ function init_standardize() {
   return 0
 }
 
+# 常数
+REGEX_IP="(2[0-4][0-9]|25[0-5]|1[0-9][0-9]|[1-9]?[0-9])(\.(2[0-4][0-9]|25[0-5]|1[0-9][0-9]|[1-9]?[0-9])){3}"
+
 # UBCT 相关信息
 UBCT_CONF=${UBCT_ROOT_DIR}/ubct.conf
 UBCT_VERSION=$(init_get_conf UBCT_VERSION "${UBCT_CONF}")
-UBCT_STD=${UBCT_ROOT_DIR}/std
+UBCT_STD=${UBCT_ROOT_DIR}/std.sh
 UBCT_CONFIG_DIR=${UBCT_ROOT_DIR}/config
 UBCT_VERIFY_DIR=${UBCT_ROOT_DIR}/verify
 
 # OS 相关信息
-IP_ADDR=$(ip route | grep default | awk '{print $3}')
+PRIMARY_NIC=$(ip route | head -1 | awk '{print $5}')
+GATEWAY_ADDR=$(ip route | grep default | awk '{print $3}')
+MAC_ADDR=$(cat /sys/class/net/"${PRIMARY_NIC}"/address)
+IP_ADDR=$(ip addr show "${PRIMARY_NIC}" | grep -Eo "${REGEX_IP}" | head -1)
 HOSTNAME=$(hostname)
 MANUFACTURER=$(init_strip "$(dmidecode -t1 | grep "Manufacturer:" | awk -F: '{print $2}')")
 PRODUCT_NAME=$(init_strip "$(dmidecode -t1 | grep "Product Name:" | awk -F: '{print $2}')")
@@ -62,5 +68,3 @@ else
   MACHINE_LOCATION=NULL
 fi
 
-# 常用参数
-REGEX_IP="(2[0-4][0-9]|25[0-5]|1[0-9][0-9]|[1-9]?[0-9])(\.(2[0-4][0-9]|25[0-5]|1[0-9][0-9]|[1-9]?[0-9])){3}"
