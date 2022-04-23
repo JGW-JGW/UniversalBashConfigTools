@@ -136,8 +136,6 @@ function ubct_update() {
 
   local dir_name="UniversalBashConfigTools-master"
 
-  mv "${install_dir}"/${dir_name}/* "${install_dir}"
-
   cp -rpf "${install_dir}"/${dir_name}/* "${install_dir}"
 
   rm -rf "${install_dir:?}/${dir_name}"
