@@ -97,7 +97,7 @@ function config_centos_7() {
 
   local parameters
 
-  if ! parameters=$(getopt -o an: --long all,name: -n "$0" -- "$@"); then
+  if ! parameters=$(getopt -o ao: --long all,only: -n "$0" -- "$@"); then
     return 1
   fi
 
@@ -126,7 +126,7 @@ function config_centos_7() {
       # TODO
 
       ;;
-    -n | --name)
+    -o | --only)
       local valid_functions funcname
       valid_functions=$(cat <<EOF
       # fix bugs for the specific version of os
@@ -155,6 +155,7 @@ EOF
         return 1
       else
         eval "${funcname}"
+        break
       fi
       ;;
     --)
