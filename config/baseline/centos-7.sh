@@ -91,6 +91,8 @@ function lock_users() {
 }
 
 function config_centos_7() {
+  std_prtmsg FS
+
   check_os
 
   local parameters
@@ -104,6 +106,9 @@ function config_centos_7() {
   while true; do
     case "$1" in
     -a | --all)
+      # fix bugs for the specific version of os
+      fix_bug
+
       # timezone
       uni_set_timezone
 
@@ -117,17 +122,40 @@ function config_centos_7() {
       # hostname
       uni_ensure_hostname
 
-      # 
+      # filesystem config
+      # TODO
 
-      return 0
       ;;
-    -t | --title)
-      title="$2"
-      shift 2
-      ;;
-    -l | --length)
-      len_total="$2"
-      shift 2
+    -n | --name)
+      local valid_functions funcname
+      valid_functions=$(cat <<EOF
+      # fix bugs for the specific version of os
+      fix_bug
+
+      # timezone
+      uni_set_timezone
+
+      # rm /etc/ssl/privatekeys
+      uni_rm_ssl_privatekeys
+
+      # users
+      add_users
+      lock_users
+
+      # hostname
+      uni_ensure_hostname
+
+      # filesystem config
+      # TODO
+EOF
+)
+      funcname="$2"
+      if ! echo "${valid_functions}" | grep -v "^[[:space:]]*$" | grep -v "^[[:space:]]*#" | grep -wq "${funcname}"; then
+        std_prtmsg FERR "unsupported baseline config argument: \"${funcname}\", for ${OS_FULL_NAME}"
+        return 1
+      else
+        eval "${funcname}"
+      fi
       ;;
     --)
       break

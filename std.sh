@@ -114,10 +114,10 @@ function std_prtmsg() {
     echo -e "${type}\c"
     ;;
   STDINFO)
-    echo -e "---- INFO\c"
+    echo -e "---- \e[40;31;1m${FUNCNAME[1]} \e[0mINFO\c"
     ;;
   STDERROR | STDERR)
-    echo -e "---- \e[47;30;5mERROR\e[0m\c"
+    echo -e "---- \e[40;31;1m${FUNCNAME[1]} \e[47;30;5mERROR\e[0m\c"
     ;;
   FUNCBEGIN | FUNCSTART | FS)
     echo -e "======== \e[40;31;1m${FUNCNAME[1]} \e[47;30mSTART\e[0m\c"
@@ -639,6 +639,80 @@ function std_check_creation_of_filesystem() {
   else
     std_prtmsg STDERR "there is not enough space on vg \"${input_vg_name}\", free space is ${vg_free_space} MB, required space is ${input_size} MB"
     return 5
+  fi
+}
+
+function std_config_filesystem() {
+  local params mount_point size type vg_name user_input check_result
+
+  if ! params=$(getopt -o m:s:t:v: --long mount_point:,size:,type:,vg_name: -n "$0" -- "$@"); then
+    return 1
+  fi
+
+  eval set -- "${params}"
+
+  while true; do
+    case "$1" in
+    -m | --mount_point)
+      mount_point="$2"
+      shift 2
+      ;;
+    -s | --size)
+      if ! std_translate_size "$2" 1>/dev/null 2>/dev/null; then
+        std_prtmsg STDERR "invalid size: \"$2\""
+        return 3
+      fi
+      size=$(std_translate_size "$2")
+      shift 2
+      ;;
+    -t | --type)
+      type="$2"
+      shift 2
+      ;;
+    -v | --vg_name)
+      vg_name="$2"
+      shift 2
+      ;;
+    --)
+      break
+      ;;
+    *)
+      std_prtmsg STDERR "invalid option: \"$1\""
+      return 2
+      ;;
+    esac
+  done
+
+  std_check_filesystem -m "${mount_point}" -s "${size}" -t "${type}"
+
+  check_result=$?
+
+  if [[ ${check_result} -eq 0 ]]; then # correct
+    std_prtmsg STDINFO "verification passed"
+    return 0
+  elif [[ ${result} -eq 2 ]]; then # filesystem does not exists, then try to create it
+    if ! std_check_creation_of_filesystem "${vg_name}" "${size}"; then
+      std_prtmsg STDERR "cannot create a filesystem with mount point \"${mount_point}\", size ${size} MB, type \"${type}\" on vg \"${vg_name}\", please check info above"
+      return 1
+    else
+      read -rp "Create a new filesystem with mount point \"${mount_point}\", size ${size} MB, type \"${type}\" on vg \"${vg_name}\"? (y/n): " user_input
+      if [[ ${user_input} == "y" ]]; then
+        # TODO: mkfs has not been finished yet
+        if ! ubct mkfs -t "${type}" -m "${mount_point}" -s "${size}" -v "${vg_name}"; then
+          std_prtmsg STDERR "filesystem creation failed, please check above for details"
+          return 1
+        else
+          std_prtmsg STDINFO "filesystem created successfully"
+          return 0
+        fi
+      else  # user_input != 'y'
+        std_prtmsg STDINFO "filesystem creation is canceled"
+        return 0
+      fi
+    fi
+  else
+    std_prtmsg STDERR "please check above for details"
+    return 1
   fi
 }
 

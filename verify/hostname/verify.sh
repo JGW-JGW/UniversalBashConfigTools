@@ -21,7 +21,7 @@ function verify_hostname() {
     std_prtmsg FEND "CORRECT"
     return 0
   else  # count == 0
-    std_prtmsg FERR "cannot find any rows in \"${file}\", try \"ubct config hostname YOUR_HOSTNAME\""
+    std_prtmsg FERR "cannot find any rows of hostname \"${current_hostname}\" in \"${file}\", try \"ubct config hostname YOUR_HOSTNAME\""
     std_prtmsg FEND "ERROR"
     return 2
   fi
