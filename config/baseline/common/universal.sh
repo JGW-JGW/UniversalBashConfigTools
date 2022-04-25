@@ -217,7 +217,7 @@ function uni_set_sysctl_conf() {
     echo -e "kernel.shmall=${kernel_shmall}" >>${file}
   fi
 
-  std_prtmsg FUNCINFO "kernel.shmall is set to ${kernel_shmall}"
+  std_prtmsg FUNCINFO "\"kernel.shmall\" is set to ${kernel_shmall}"
 
   if std_amid "^kernel\.shmmax[[:space:]]*=.*$" ${file}; then
     sed -ri "s/^kernel\.shmmax[[:space:]]*=.*$/kernel.shmmax=${kernel_shmmax}/g" ${file}
@@ -225,7 +225,7 @@ function uni_set_sysctl_conf() {
     echo -e "kernel.shmmax=${kernel_shmmax}" >>${file}
   fi
 
-  std_prtmsg FUNCINFO "kernel.shmmax is set to ${kernel_shmmax}"
+  std_prtmsg FUNCINFO "\"kernel.shmmax\" is set to ${kernel_shmmax}"
 
   if std_amid "^kernel\.shmmni[[:space:]]*=.*$" ${file}; then
     sed -ri "s/^kernel\.shmmni[[:space:]]*=.*$/kernel.shmmni=${kernel_shmmni}/g" ${file}
@@ -233,7 +233,7 @@ function uni_set_sysctl_conf() {
     echo -e "kernel.shmmni=${kernel_shmmni}" >>${file}
   fi
 
-  std_prtmsg FUNCINFO "kernel.shmmni is set to ${kernel_shmmni}"
+  std_prtmsg FUNCINFO "\"kernel.shmmni\" is set to ${kernel_shmmni}"
 
   if std_amid "^fs\.file-max[[:space:]]*=.*$" ${file}; then
     sed -ri "s/^fs\.file-max[[:space:]]*=.*$/fs.file-max=6815744/g" ${file}
@@ -241,7 +241,7 @@ function uni_set_sysctl_conf() {
     echo -e "fs.file-max=6815744" >>${file}
   fi
 
-  std_prtmsg FUNCINFO "fs.file-max is set to 6815744"
+  std_prtmsg FUNCINFO "\"fs.file-max\" is set to 6815744"
 
   if std_amid "^kernel\.sem[[:space:]]*=.*$" ${file}; then
     sed -ri "s/^kernel\.sem[[:space:]]*=.*$/kernel.sem=2048 256000 512 8192/g" ${file}
@@ -249,7 +249,7 @@ function uni_set_sysctl_conf() {
     echo -e "kernel.sem=2048 256000 512 8192" >>${file}
   fi
 
-  std_prtmsg FUNCINFO "kernel.sem is set to \"2048 256000 512 8192\""
+  std_prtmsg FUNCINFO "\"kernel.sem\" is set to \"2048 256000 512 8192\""
 
   if std_amid "^vm\.swappiness[[:space:]]*=.*$" ${file}; then
     sed -ri "s/^vm\.swappiness[[:space:]]*=.*$/vm.swappiness=10/g" ${file}
@@ -257,7 +257,7 @@ function uni_set_sysctl_conf() {
     echo -e "vm.swappiness=10" >>${file}
   fi
 
-  std_prtmsg FUNCINFO "vm.swappiness is set to 10"
+  std_prtmsg FUNCINFO "\"vm.swappiness\" is set to 10"
 
   if std_amid "^net\.ipv6\.conf\.all\.disable_ipv6[[:space:]]*=.*$" ${file}; then
     sed -ri "s/^net\.ipv6\.conf\.all\.disable_ipv6[[:space:]]*=.*$/net.ipv6.conf.all.disable_ipv6=0/g" >>${file}
@@ -265,7 +265,7 @@ function uni_set_sysctl_conf() {
     echo -e "net.ipv6.conf.all.disable_ipv6=0" >>${file}
   fi
 
-  std_prtmsg FUNCINFO "net.ipv6.conf.all.disable_ipv6 is set to 0"
+  std_prtmsg FUNCINFO "\"net.ipv6.conf.all.disable_ipv6\" is set to 0"
 
   if std_amid "^net\.core\.somaxconn[[:space:]]*=.*$" ${file}; then
     sed -ri "s/^net\.core\.somaxconn[[:space:]]*=.*$/net.core.somaxconn=65535/g" ${file}
@@ -273,7 +273,7 @@ function uni_set_sysctl_conf() {
     echo -e "net.core.somaxconn=65535" >>${file}
   fi
 
-  std_prtmsg FUNCINFO "net.core.somaxconn is set to 65535"
+  std_prtmsg FUNCINFO "\"net.core.somaxconn\" is set to 65535"
 
   if std_amid "^net\.ipv4\.tcp_max_syn_backlog[[:space:]]*=.*$" ${file}; then
     sed -ri "s/^net\.ipv4\.tcp_max_syn_backlog[[:space:]]*=.*$/net.ipv4.tcp_max_syn_backlog=4096/g" ${file}
@@ -281,7 +281,7 @@ function uni_set_sysctl_conf() {
     echo -e "net.ipv4.tcp_max_syn_backlog=4096" >>${file}
   fi
 
-  std_prtmsg FUNCINFO "net.ipv4.tcp_max_syn_backlog is set to 4096"
+  std_prtmsg FUNCINFO "\"net.ipv4.tcp_max_syn_backlog\" is set to 4096"
 
   std_prtmsg FEND "DONE"
 }
@@ -305,7 +305,7 @@ function uni_set_login_defs() {
     echo -e "LOGIN_RETRIES\t6" >>${file}
   fi
 
-  std_prtmsg FINFO "LOGIN_RETRIES is set to 6"
+  std_prtmsg FINFO "\"LOGIN_RETRIES\" is set to 6"
 
   if std_amid "^FAIL_DELAY[[:space:]]+.*$" ${file}; then
     sed -ri "s/^FAIL_DELAY[[:space:]]+.*$/FAIL_DELAY\t3/g" ${file}
@@ -313,7 +313,7 @@ function uni_set_login_defs() {
     echo -e "FAIL_DELAY\t3" >>${file}
   fi
 
-  std_prtmsg FINFO "FAIL_DELAY is set to 3"
+  std_prtmsg FINFO "\"FAIL_DELAY\" is set to 3"
 
   std_prtmsg FEND "DONE"
 }
@@ -339,7 +339,7 @@ function uni_set_ssh_config() {
       echo -e "Ciphers aes128-cbc,aes192-cbc,aes256-cbc,aes128-ctr,aes192-ctr,aes256-ctr,3des-cbc" >>${file}
     fi
 
-    std_prtmsg FINFO "Ciphers is set to \"aes128-cbc,aes192-cbc,aes256-cbc,aes128-ctr,aes192-ctr,aes256-ctr,3des-cbc\""
+    std_prtmsg FINFO "\"Ciphers\" is set to \"aes128-cbc,aes192-cbc,aes256-cbc,aes128-ctr,aes192-ctr,aes256-ctr,3des-cbc\""
     ;;
   *)
     if std_amid "^Ciphers[[:space:]]+.*$" ${file}; then
@@ -348,7 +348,7 @@ function uni_set_ssh_config() {
       echo -e "aes128-gcm,aes256-gcm,aes128-cbc,aes192-cbc,aes256-cbc,aes128-ctr,aes192-ctr,aes256-ctr,3des-cbc" >>${file}
     fi
 
-    std_prtmsg FINFO "Ciphers is set to \"aes128-gcm,aes256-gcm,aes128-cbc,aes192-cbc,aes256-cbc,aes128-ctr,aes192-ctr,aes256-ctr,3des-cbc\""
+    std_prtmsg FINFO "\"Ciphers\" is set to \"aes128-gcm,aes256-gcm,aes128-cbc,aes192-cbc,aes256-cbc,aes128-ctr,aes192-ctr,aes256-ctr,3des-cbc\""
     ;;
   esac
 
@@ -374,7 +374,7 @@ function uni_set_sshd_config() {
     echo -e "PermitRootLogin\tyes" >>${file}
   fi
 
-  std_prtmsg FINFO "PermitRootLogin is set to \"yes\""
+  std_prtmsg FINFO "\"PermitRootLogin\" is set to \"yes\""
 
   if std_amid "^Banner[[:space:]]+.*$" ${file}; then
     sed -ri "s|^Banner[[:space:]]+.*$|Banner\t/etc/issue|g" ${file}
@@ -382,17 +382,17 @@ function uni_set_sshd_config() {
     echo -e "Banner\t/etc/issue" >>${file}
   fi
 
-  std_prtmsg FINFO "Banner is set to \"${file}\""
+  std_prtmsg FINFO "\"Banner\" is set to \"${file}\""
 
   case ${OS_FULL_NAME} in
   sles11.4)
     if std_amid "^Ciphers[[:space:]]+.*$" ${file}; then
       sed -ri "s/^Ciphers[[:space:]]+.*$/Ciphers aes128-cbc,aes192-cbc,aes256-cbc,aes128-ctr,aes192-ctr,aes256-ctr,3des-cbc/g" ${file}
     else
-      echo -e "Ciphers aes128-cbc,aes192-cbc,aes256-cbc,aes128-ctr,aes192-ctr,aes256-ctr,3des-cbc" >>${file}
+      echo -e "\"Ciphers\" aes128-cbc,aes192-cbc,aes256-cbc,aes128-ctr,aes192-ctr,aes256-ctr,3des-cbc" >>${file}
     fi
 
-    std_prtmsg FINFO "Ciphers is set to \"aes128-cbc,aes192-cbc,aes256-cbc,aes128-ctr,aes192-ctr,aes256-ctr,3des-cbc\""
+    std_prtmsg FINFO "\"Ciphers\" is set to \"aes128-cbc,aes192-cbc,aes256-cbc,aes128-ctr,aes192-ctr,aes256-ctr,3des-cbc\""
     ;;
   *)
     if std_amid "^Ciphers[[:space:]]+.*$" ${file}; then
@@ -401,7 +401,7 @@ function uni_set_sshd_config() {
       echo -e "aes128-gcm,aes256-gcm,aes128-cbc,aes192-cbc,aes256-cbc,aes128-ctr,aes192-ctr,aes256-ctr,3des-cbc" >>${file}
     fi
 
-    std_prtmsg FINFO "Ciphers is set to \"aes128-gcm,aes256-gcm,aes128-cbc,aes192-cbc,aes256-cbc,aes128-ctr,aes192-ctr,aes256-ctr,3des-cbc\""
+    std_prtmsg FINFO "\"Ciphers\" is set to \"aes128-gcm,aes256-gcm,aes128-cbc,aes192-cbc,aes256-cbc,aes128-ctr,aes192-ctr,aes256-ctr,3des-cbc\""
     ;;
   esac
 
@@ -656,7 +656,297 @@ function uni_enable_services() {
 function uni_ensure_hostname() {
   std_prtmsg FS
 
-  ubct hostname "$(hostname)"
+  if ! ubct config hostname "$(hostname)"; then
+    std_prtmsg FEND "ERROR"
+    return 1
+  else
+    std_prtmsg FEND "DONE"
+    return 0
+  fi
+}
+
+function uni_config_yum_repo() {
+  std_prtmsg FS
+
+  local yum_dir="/etc/yum.repos.d"
+
+  if [[ ! -d ${yum_dir} ]]; then
+    std_prtmsg FERR "\"${yum_dir}\" is not a directory"
+    std_prtmsg FEND "ERROR"
+    return 1
+  fi
+
+  if ! std_backup_directory ${yum_dir}; then
+    std_prtmsg FERR "backup failed, please check info above..."
+    std_prtmsg FEND "ERROR"
+    return 3
+  fi
+
+  rm -rf ${yum_dir:?}/*
+
+  local filename="${yum_dir}/${OS_FULL_NAME}_${CPU_TYPE}.repo"
+
+  cat >"${filename}" <<EOF
+[${OS_FULL_NAME} - Base]
+name = ${OS_FULL_NAME} - Base
+baseurl = http://mirrors.bupt.edu.cn/centos/7.9.2009/os/x86_64/
+gpgcheck = 1
+enabled = 1
+
+[${OS_FULL_NAME} - Extras]
+name = ${OS_FULL_NAME} - Extras
+baseurl = http://mirrors.bupt.edu.cn/centos/7.9.2009/extras/x86_64/
+gpgcheck = 1
+enabled = 1
+
+[${OS_FULL_NAME} - Updates]
+name = ${OS_FULL_NAME} - Updates
+baseurl = http://mirrors.huaweicloud.com/centos/7.9.2009/updates/x86_64/
+gpgcheck = 1
+enabled = 1
+EOF
+
+  yum clean all && yum makecache
+
+  std_prtmsg FI "please check \"${filename}\" for details"
 
   std_prtmsg FEND "DONE"
 }
+
+function uni_install_packages_by_yum() {
+  std_prtmsg FS
+
+  local package_names
+
+  case ${OS_FULL_NAME} in
+  centos-7)
+    package_names="vsftpd sysstat nscd ksh expect ntp telnet lftp ftp"
+    ;;
+  *)
+    std_prtmsg FERR "unsupported os: \"${OS_FULL_NAME}\""
+    std_prtmsg FEND "ERROR"
+    return 2
+    ;;
+  esac
+
+  for item in ${package_names}; do
+    yum -y install "${item}"
+    std_prtmsg FI "\"${item}\" installed"
+  done
+
+  # 指定源进行安装，比如安全补丁集
+  yum -y repository-packages "${OS_FULL_NAME} - Updates" install
+
+  std_prtmsg FI "packages in repository \"${OS_FULL_NAME} - Updates\" are installed"
+
+  std_prtmsg FEND "DONE"
+}
+
+function uni_set_primary_language() {
+  std_prtmsg FS
+
+  LANG="en_US.UTF-8"
+
+  localectl set-locale LANG=en_US.UTF-8
+
+  std_prtmsg FEND "DONE"
+}
+
+function uni_set_vsftpd_conf() {
+  std_prtmsg FS
+
+  local file="/etc/vsftpd/vsftpd.conf"
+
+  if ! std_backup_file ${file}; then
+    std_prtmsg FERR "backup failed, please check info above..."
+    std_prtmsg FEND "ERROR"
+    return 1
+  fi
+
+  std_fix_file_eof ${file}
+
+  if std_amid "^listen[[:space:]]*=.*$" ${file}; then
+    sed -ri "s/^listen[[:space:]]*=.*$/listen=YES/g" ${file}
+  else
+    echo -e "listen=YES" >>${file}
+  fi
+
+  std_prtmsg FI "\"listen\" is set to \"YES\""
+
+  if std_amid "^listen_ipv6[[:space:]]*=.*$" ${file}; then
+    sed -ri "s/^listen_ipv6[[:space:]]*=.*$/listen_ipv6=NO/g" ${file}
+  else
+    echo -e "listen_ipv6=NO" >>${file}
+  fi
+
+  std_prtmsg FI "\"listen_ipv6\" is set to \"NO\""
+
+  if std_amid "^use_localtime[[:space:]]*=.*$" ${file}; then
+    sed -ri "s/^use_localtime[[:space:]]*=.*$/use_localtime=YES/g" ${file}
+  else
+    echo -e "use_localtime=YES" >>${file}
+  fi
+
+  std_prtmsg FI "\"use_localtime\" is set to \"YES\""
+
+  if std_amid "^write_enable[[:space:]]*=.*$" ${file}; then
+    sed -ri "s/^write_enable[[:space:]]*=.*$/write_enable=YES/g" ${file}
+  else
+    echo -e "write_enable=YES" >>${file}
+  fi
+
+  std_prtmsg FI "\"write_enable\" is set to \"YES\""
+
+  if std_amid "^local_enable[[:space:]]*=.*$" ${file}; then
+    sed -ri "s/^local_enable[[:space:]]*=.*$/local_enable=YES/g" ${file}
+  else
+    echo -e "local_enable=YES" >>${file}
+  fi
+
+  std_prtmsg FI "\"local_enable\" is set to \"YES\""
+
+  if std_amid "^local_umask[[:space:]]*=.*$" ${file}; then
+    sed -ri "s/^local_umask[[:space:]]*=.*$/local_umask=022/g" ${file}
+  else
+    echo -e "local_umask=022" >>${file}
+  fi
+
+  std_prtmsg FI "\"local_umask\" is set to \"022\""
+
+  if std_amid "^anonymous_enable[[:space:]]*=.*$" ${file}; then
+    sed -ri "s/^anonymous_enable[[:space:]]*=.*$/anonymous_enable=NO/g" ${file}
+  else
+    echo -e "anonymous_enable=NO" >>${file}
+  fi
+
+  std_prtmsg FI "\"anonymous_enable\" is set to \"NO\""
+
+  if std_amid "^xferlog_enable[[:space:]]*=.*$" ${file}; then
+    sed -ri "s/^xferlog_enable[[:space:]]*=.*$/xferlog_enable=YES/g" ${file}
+  else
+    echo -e "xferlog_enable=YES" >>${file}
+  fi
+
+  std_prtmsg FI "\"xferlog_enable\" is set to \"YES\""
+
+  if std_amid "^vsftpd_log_file[[:space:]]*=.*$" ${file}; then
+    sed -ri "s|^vsftpd_log_file[[:space:]]*=.*$|vsftpd_log_file=/var/log/vsftpd.log|g" ${file}
+  else
+    echo -e "vsftpd_log_file=/var/log/vsftpd.log" >>${file}
+  fi
+
+  std_prtmsg FI "\"vsftpd_log_file\" is set to \"/var/log/vsftpd.log\""
+
+  if std_amid "^ascii_upload_enable[[:space:]]*=.*$" ${file}; then
+    sed -ri "s/^ascii_upload_enable[[:space:]]*=.*$/ascii_upload_enable=YES/g" ${file}
+  else
+    echo -e "ascii_upload_enable=YES" >>${file}
+  fi
+
+  std_prtmsg FI "\"ascii_upload_enable\" is set to \"YES\""
+
+  if std_amid "^ascii_download_enable[[:space:]]*=.*$" ${file}; then
+    sed -ri "s/^ascii_download_enable[[:space:]]*=.*$/ascii_download_enable=YES/g" ${file}
+  else
+    echo -e "ascii_download_enable=YES" >>${file}
+  fi
+
+  std_prtmsg FI "\"ascii_download_enable\" is set to \"YES\""
+
+  if std_amid "^banner_file[[:space:]]*=.*$" ${file}; then
+    sed -ri "s|^banner_file[[:space:]]*=.*$|banner_file=/etc/issue|g" ${file}
+  else
+    echo -e "banner_file=/etc/issue" >>${file}
+  fi
+
+  std_prtmsg FI "\"banner_file\" is set to \"/etc/issue\""
+
+  std_prtmsg FEND "DONE"
+}
+
+function uni_ban_ftp_users() {
+  std_prtmsg FS
+
+  local file1="/etc/vsftpd/ftpusers"
+  local file2="/etc/vsftpd/user_list"
+
+  for file in ${file1} ${file2}; do
+    if ! std_backup_file ${file}; then
+      std_prtmsg FERR "backup failed, please check info above..."
+      std_prtmsg FEND "ERROR"
+      return 1
+    fi
+
+    std_fix_file_eof ${file}
+  done
+
+  local users="root"
+
+  for file in ${file1} ${file2}; do
+    for user in ${users}; do
+      if ! std_amid "^[[:space:]]*${user}[[:space:]]*$" ${file}; then
+        echo -e "${user}" >>${file}
+      fi
+    done
+  done
+
+  std_prtmsg FEND "DONE"
+}
+
+function uni_set_profile() {
+  std_prtmsg FS
+
+  local file="/etc/profile"
+
+  if ! std_backup_file ${file}; then
+    std_prtmsg FERR "backup failed, please check info above..."
+    std_prtmsg FEND "ERROR"
+    return 1
+  fi
+
+  std_fix_file_eof ${file}
+
+  if std_amid "^export[[:space:]]+TMOUT[[:space:]]*=.*$" ${file}; then
+    sed -ri "s/^export[[:space:]]+TMOUT[[:space:]]*=.*$/export TMOUT=600/g" ${file}
+  else
+    echo -e "export TMOUT=600" >>${file}
+  fi
+
+  std_prtmsg FI "\"TMOUT\" is set to \"600\""
+
+  if std_amid "^umask[[:space:]]+.*$" ${file}; then
+    sed -ri "s/^umask[[:space:]]+.*$/umask 022/g" ${file}
+  else
+    echo -e "umask 022" >>${file}
+  fi
+
+  std_prtmsg FI "\"umask\" is set to \"022\""
+
+  std_prtmsg FEND "DONE"
+}
+
+function uni_set_bashrc() {
+  std_prtmsg FS
+
+  local file="/etc/bashrc"
+
+  if ! std_backup_file ${file}; then
+    std_prtmsg FERR "backup failed, please check info above..."
+    std_prtmsg FEND "ERROR"
+    return 1
+  fi
+
+  std_fix_file_eof ${file}
+
+  if std_amid "^umask[[:space:]]+.*$" ${file}; then
+    sed -ri "s/^umask[[:space:]]+.*$/umask 022/g" ${file}
+  else
+    echo -e "umask 022" >>${file}
+  fi
+
+  std_prtmsg FI "\"umask\" is set to \"022\""
+
+  std_prtmsg FEND "DONE"
+}
+
+# TODO: pwquality.conf
