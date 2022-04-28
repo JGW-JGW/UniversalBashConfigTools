@@ -185,7 +185,37 @@ function config_centos_7() {
       uni_config_file_permission
 
       # /etc/security/pwquality.conf
+      uni_set_pwquality_conf
 
+      # /etc/pam.d/system-auth
+      uni_set_system_auth
+
+      # /etc/pam.d/password-auth
+      uni_set_password_auth
+
+      # /etc/udev/rules.d/99-scheduler.rules
+      uni_config_io_scheduler
+
+      # ntp
+      uni_set_ntp_conf
+
+      # dns
+      uni_config_dns
+
+      # ban services
+      uni_ban_services
+
+      # activate all parameters
+      uni_activate_sysctl_conf
+
+      # permit services
+      uni_permit_services
+
+      # install apps
+      install_java
+
+      # rsyslog
+      uni_config_rsyslog
 
       break
       ;;
@@ -209,7 +239,99 @@ function config_centos_7() {
       uni_ensure_hostname
 
       # filesystem config
-      # TODO
+      std_config_filesystem -m "/" -s "5000MB" -t "xfs" -v "centos_local"
+      std_config_filesystem -m "/jgw" -s 5GB -t "ext4" -v "centos_local"
+
+      # install packages
+      uni_config_yum_repo
+      uni_install_packages_by_yum
+
+      # graphical target
+      uni_set_default_target
+
+      # primary language
+      uni_set_primary_language
+
+      # /etc/vsftpd/vsftpd.conf
+      uni_set_vsftpd_conf
+
+      # /etc/vsftpd/ftpusers, /etc/vsftpd/user_list
+      uni_ban_ftp_users
+
+      # /etc/security/limits.conf
+      uni_set_limits_conf
+
+      # /etc/sysctl.conf
+      uni_set_sysctl_conf
+
+      # /etc/login.defs
+      uni_set_login_defs
+
+      # /etc/ssh/ssh_config
+      uni_set_ssh_config
+
+      # /etc/ssh/sshd_config
+      uni_set_sshd_config
+
+      # /etc/issue
+      uni_set_issue
+
+      # /etc/issue.net
+      uni_set_issue_net
+
+      # /etc/profile
+      uni_set_profile
+
+      # /etc/bashrc
+      uni_set_bashrc
+
+      # /etc/cron.allow
+      uni_set_cron_allow
+
+      # /etc/at.allow
+      uni_set_at_allow
+
+      # /etc/systemd/system.conf
+      uni_set_system_conf
+
+      # /etc/fstab
+      uni_set_fstab
+
+      # /var/spool/cron/tabs/*
+      uni_config_file_permission
+
+      # /etc/security/pwquality.conf
+      uni_set_pwquality_conf
+
+      # /etc/pam.d/system-auth
+      uni_set_system_auth
+
+      # /etc/pam.d/password-auth
+      uni_set_password_auth
+
+      # /etc/udev/rules.d/99-scheduler.rules
+      uni_config_io_scheduler
+
+      # ntp
+      uni_set_ntp_conf
+
+      # dns
+      uni_config_dns
+
+      # ban services
+      uni_ban_services
+
+      # activate all parameters
+      uni_activate_sysctl_conf
+
+      # permit services
+      uni_permit_services
+
+      # install apps
+      install_java
+
+      # rsyslog
+      uni_config_rsyslog
 EOF
 )
       funcname="$2"

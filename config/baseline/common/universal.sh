@@ -641,13 +641,40 @@ function uni_activate_sysctl_conf() {
   std_prtmsg FEND "DONE"
 }
 
-function uni_enable_services() {
+function uni_permit_services() {
   std_prtmsg FS
 
-  for service in sshd vsftpd xinetd nscd; do
-    std_systemctl enable ${service}
-    std_systemctl restart ${service}
-    std_prtmsg FINFO "${service} is enabled and restarted"
+  for service in sshd vsftpd xinetd nscd ntpd; do
+    if std_systemctl is-installed "${service}" | grep -xq "uninstalled"; then
+      std_prtmsg FI "\"${service}\" is not found"
+    else
+      std_systemctl enable ${service}
+      std_systemctl restart ${service}
+      std_prtmsg FI "${service} is enabled and restarted"
+    fi
+  done
+
+  std_prtmsg FEND "DONE"
+}
+
+function uni_ban_services() {
+  std_prtmsg FS
+
+  if chkconfig telnet off 2>&1 | grep -q "No such file or directory"; then
+    std_prtmsg FI "\"telnet\" not found"
+  else
+    chkconfig telnet off
+    std_prtmsg FI "\"telnet\" is disabled"
+  fi
+
+  for service in firewalld rpcbind.socket rpcbind nfs-server nfs-lock nfs-idmap postfix tftp ypbind exec fingerd pop2 pop3 pop3s printer suucp pure-ftpd uucp apache2 rsh.socket rlogin.socket; do
+    if std_systemctl is-installed "${service}" | grep -xq "uninstalled"; then
+      std_prtmsg FI "\"${service}\" not found"
+    else
+      std_systemctl stop ${service}
+      std_systemctl disable ${service}
+      std_prtmsg FI "${service} is stopped and disabled"
+    fi
   done
 
   std_prtmsg FEND "DONE"
@@ -949,4 +976,256 @@ function uni_set_bashrc() {
   std_prtmsg FEND "DONE"
 }
 
-# TODO: pwquality.conf
+function uni_set_pwquality_conf() {
+  std_prtmsg FS
+
+  local file="/etc/security/pwquality.conf"
+
+  if ! std_backup_file ${file}; then
+    std_prtmsg FERR "backup failed, please check info above..."
+    std_prtmsg FEND "ERROR"
+    return 1
+  fi
+
+  std_fix_file_eof ${file}
+
+  if std_amid "^minlen[[:space:]]*=.*$" ${file}; then
+    sed -ri "s/^minlen[[:space:]]*=.*$/minlen = 8/g" ${file}
+  else
+    echo -e "minlen = 8" >>${file}
+  fi
+
+  std_prtmsg FI "\"minlen\" is set to 8"
+
+  if std_amid "^maxrepeat[[:space:]]*=.*$" ${file}; then
+    sed -ri "s/^maxrepeat[[:space:]]*=.*$/maxrepeat = 3/g" ${file}
+  else
+    echo -e "maxrepeat = 3" >>${file}
+  fi
+
+  std_prtmsg FI "\"minlen\" is set to 8"
+
+  if std_amid "^dcredit[[:space:]]*=.*$" ${file}; then
+    sed -ri "s/^dcredit[[:space:]]*=.*$/dcredit = -1/g" ${file}
+  else
+    echo -e "dcredit = -1" >>${file}
+  fi
+
+  std_prtmsg FI "\"dcredit\" is set to -1"
+
+  if std_amid "^ucredit[[:space:]]*=.*$" ${file}; then
+    sed -ri "s/^ucredit[[:space:]]*=.*$/ucredit = 0/g" ${file}
+  else
+    echo -e "ucredit = 0" >>${file}
+  fi
+
+  std_prtmsg FI "\"ucredit\" is set to 0"
+
+  if std_amid "^lcredit[[:space:]]*=.*$" ${file}; then
+    sed -ri "s/^lcredit[[:space:]]*=.*$/lcredit = -1/g" ${file}
+  else
+    echo -e "lcredit = -1" >>${file}
+  fi
+
+  std_prtmsg FI "\"lcredit\" is set to -1"
+
+  if std_amid "^ocredit[[:space:]]*=.*$" ${file}; then
+    sed -ri "s/^ocredit[[:space:]]*=.*$/ocredit = -1/g" ${file}
+  else
+    echo -e "ocredit = -1" >>${file}
+  fi
+
+  std_prtmsg FI "\"ocredit\" is set to -1"
+
+  if std_amid "^minclass[[:space:]]*=.*$" ${file}; then
+    sed -ri "s/^minclass[[:space:]]*=.*$/minclass = 3/g" ${file}
+  else
+    echo -e "minclass = 3" >>${file}
+  fi
+
+  std_prtmsg FI "\"minclass\" is set to 3"
+
+  std_prtmsg FEND "DONE"
+}
+
+function uni_set_system_auth() {
+  std_prtmsg FS
+
+  local file="/etc/pam.d/system-auth"
+
+  if ! std_backup_file ${file}; then
+    std_prtmsg FERR "backup failed, please check info above..."
+    std_prtmsg FEND "ERROR"
+    return 1
+  fi
+
+  std_fix_file_eof ${file}
+
+  if std_amid "^password[[:space:]]+sufficient[[:space:]]+pam_unix.so[[:space:]]+.*$" ${file}; then
+    sed -ri "s/^password[[:space:]]+sufficient[[:space:]]+pam_unix.so[[:space:]]+.*$/password    sufficient    pam_unix.so sha512 shadow nullok try_first_pass use_authtok/g" ${file}
+  else
+    echo -e "password    sufficient    pam_unix.so sha512 shadow nullok try_first_pass use_authtok" >>${file}
+  fi
+
+  std_prtmsg FI "\"password sufficient\" is set to \"pam_unix.so sha512 shadow nullok try_first_pass use_authtok\""
+
+  cp -fp ${file} ${file}.tmp
+
+  if ! std_amid "^auth[[:space:]]+required[[:space:]]+pam_tally2\.so[[:space:]]+onerr=fail[[:space:]]+deny=6[[:space:]]+unlock_time=1800[[:space:]]*$" ${file}; then
+    awk '/^auth[[:space:]]+required[[:space:]]+pam_env\.so[[:space:]]*$/ {
+      print;
+      print "auth        required      pam_tally2.so onerr=fail deny=6 unlock_time=1800";
+      next
+    }; {
+      print
+    }' ${file} >${file}.tmp
+    cp -fp ${file}.tmp ${file}
+  fi
+
+  std_prtmsg FI "\"auth        required      pam_tally2.so onerr=fail deny=6 unlock_time=1800\" is added to \"${file}\""
+
+  if ! std_amid "^account[[:space:]]+required[[:space:]]+pam_tally2\.so[[:space:]]*$" ${file}; then
+    awk '/^auth[[:space:]]+required[[:space:]]+pam_deny\.so[[:space:]]*$/ {
+      print;
+      print "account     required      pam_tally2.so";
+      next
+    }; {
+      print
+    }' ${file} >${file}.tmp
+    cp -fp ${file}.tmp ${file}
+  fi
+
+  std_prtmsg FI "\"account     required      pam_tally2.so\" is added to \"${file}\""
+
+  rm -f ${file}.tmp
+
+  std_prtmsg FEND "DONE"
+}
+
+function uni_set_password_auth() {
+  std_prtmsg FS
+
+  local file="/etc/pam.d/password-auth"
+
+  if ! std_backup_file ${file}; then
+    std_prtmsg FERR "backup failed, please check info above..."
+    std_prtmsg FEND "ERROR"
+    return 1
+  fi
+
+  std_fix_file_eof ${file}
+
+  cp -fp ${file} ${file}.tmp
+
+  if ! std_amid "^auth[[:space:]]+required[[:space:]]+pam_tally2\.so[[:space:]]+onerr=fail[[:space:]]+deny=6[[:space:]]+unlock_time=1800[[:space:]]*$" ${file}; then
+    awk '/^auth[[:space:]]+required[[:space:]]+pam_env\.so[[:space:]]*$/ {
+      print;
+      print "auth        required      pam_tally2.so onerr=fail deny=6 unlock_time=1800";
+      next
+    }; {
+      print
+    }' ${file} >${file}.tmp
+    cp -fp ${file}.tmp ${file}
+  fi
+
+  std_prtmsg FI "\"auth        required      pam_tally2.so onerr=fail deny=6 unlock_time=1800\" is added to \"${file}\""
+
+  if ! std_amid "^account[[:space:]]+required[[:space:]]+pam_tally2\.so[[:space:]]*$" ${file}; then
+    awk '/^auth[[:space:]]+required[[:space:]]+pam_deny\.so[[:space:]]*$/ {
+      print;
+      print "account     required      pam_tally2.so";
+      next
+    }; {
+      print
+    }' ${file} >${file}.tmp
+    cp -fp ${file}.tmp ${file}
+  fi
+
+  std_prtmsg FI "\"account     required      pam_tally2.so\" is added to \"${file}\""
+
+  rm -f ${file}.tmp
+
+  std_prtmsg FEND "DONE"
+}
+
+function uni_set_ntp_conf() {
+  std_prtmsg FS
+
+  local file="/etc/ntp.conf"
+
+  if ! std_backup_file ${file}; then
+    std_prtmsg FERR "backup failed, please check info above..."
+    std_prtmsg FEND "ERROR"
+    return 1
+  fi
+
+  std_fix_file_eof ${file}
+
+  if std_amid "^server[[:space:]]+${REGEX_IP}.*$" ${file}; then
+    sed -ri "/^server[[:space:]]+${REGEX_IP}[[:space:]]+iburst$/d" ${file}
+  fi
+
+  echo -e "# server 1.1.1.1 iburst" >>${file}
+
+  std_prtmsg FI "ntp server 1.1.1.1 is added to \"${file}\""
+
+  std_prtmsg FEND "DONE"
+}
+
+function uni_config_rsyslog() {
+  std_prtmsg FS
+
+  local file="/etc/rsyslog.conf"
+
+  if ! std_backup_file ${file}; then
+    std_prtmsg FERR "backup failed, please check info above..."
+    std_prtmsg FEND "ERROR"
+    return 1
+  fi
+
+  std_fix_file_eof ${file}
+
+  std_prtmsg FI "do nothing..."
+
+  std_prtmsg FEND "DONE"
+}
+
+function uni_config_io_scheduler() {
+  std_prtmsg FS
+
+  local file="/etc/udev/rules.d/99-scheduler.rules"
+
+  if ! std_backup_file ${file}; then
+    std_prtmsg FERR "backup failed, please check info above..."
+    std_prtmsg FEND "ERROR"
+    return 1
+  fi
+
+  std_fix_file_eof ${file}
+
+  case ${OS_FULL_NAME} in
+  kylinV10)
+    sed -ri "/^ACTION==.*KERNEL==.*SUBSYSTEM==.*ATTR\{queue\/scheduler\}=.*$/d" ${file}
+    cat >>${file} <<'EOF'
+ACTION=="add|change", KERNEL=="sda", SUBSYSTEM=="block", ATTR{queue/scheduler}="bfq"
+ACTION=="add|change", KERNEL=="sd[b-z]", SUBSYSTEM=="block", ATTR{queue/scheduler}="none"
+EOF
+    for dev in $(lsblk -S | awk '/^sd/ {print $1}'); do
+      local scheduler="/sys/block/${dev}/queue/scheduler"
+      if [[ ${dev} == "sda" ]]; then
+        [[ $(std_get_dev_scheduler "${dev}") != "bfq" ]] && echo bfq >"${scheduler}"
+      else
+        [[ $(std_get_dev_scheduler "${dev}") != "none" ]] && echo none >"${scheduler}"
+      fi
+      std_prtmsg FI "io scheduler of \"${dev}\" is set to \"$(std_get_dev_scheduler "${dev}")\""
+    done
+    ;;
+  *)
+    std_prtmsg FERR "unsupported os: \"${OS_FULL_NAME}\""
+    std_prtmsg FEND "ERROR"
+    return 1
+    ;;
+  esac
+
+  std_prtmsg FEND "DONE"
+}
