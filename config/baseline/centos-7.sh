@@ -340,16 +340,12 @@ EOF
         std_prtmsg FEND "ERROR"
         return 1
       else
-        eval "${funcname}"
+        "${funcname}"
         break
       fi
       ;;
     --)
       break
-      ;;
-    *)
-      std_prtmsg STDERR "invalid option: \"$1\""
-      return 1
       ;;
     esac
   done

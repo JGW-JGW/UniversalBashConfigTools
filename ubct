@@ -30,6 +30,9 @@ UBCT_ROOT_DIR=$(dirname "$(readlink -f "$0")")
 # shellcheck source=./verify/hostname/verify.sh
 . "${UBCT_VERIFY_DIR}"/hostname/verify.sh
 
+# shellcheck source=./verify/baseline/verify.sh
+. "${UBCT_VERIFY_DIR}"/baseline/verify.sh
+
 # shellcheck source=./verify/control
 . "${UBCT_VERIFY_DIR}"/control
 
@@ -50,12 +53,10 @@ Basic:
   ubct -u|--update|update                      download from GitHub and reinstall
 
 Config baseline:
-  ubct config baseline                         auto-detect os and configure it
   ubct config baseline -a|--all                auto-detect os and configure it
   ubct config baseline -o|--only <FUNCNAME>    if FUNCNAME is a valid configuration of current os, execute it
 
 Verify baseline:
-  ubct verify baseline                         auto-detect os and verify its config
   ubct verify baseline -a|--all                auto-detect os and verify its config
   ubct verify baseline -o|--only <ITEMNAME>    if ITEMNAME is a group of valid verifications of current os, verify it 
 

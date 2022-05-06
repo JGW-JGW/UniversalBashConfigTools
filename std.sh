@@ -179,10 +179,6 @@ function std_prtline() {
     --)
       break
       ;;
-    *)
-      std_prtmsg STDERR "invalid option: \"$1\""
-      return 1
-      ;;
     esac
   done
 
@@ -274,6 +270,26 @@ function std_amid() {
 function std_cmd_exists() {
   local cmd=$1
   type "${cmd}" 1>/dev/null 2>/dev/null && return 0 || return 1
+}
+
+function std_is_file_writable() {
+  local file
+
+  file=$*
+
+  if [[ -f ${filename} ]]; then
+    std_prtmsg STDINFO "filename \"${filename}\" is writable"
+    return 0
+  fi
+
+  if touch "${filename}" 2>/dev/null 1>/dev/null; then
+    rm "${filename}"
+    std_prtmsg STDINFO "filename \"${filename}\" is writable"
+    return 0
+  else
+    std_prtmsg STDERR "invalid filename: \"${filename}\""
+    return 1
+  fi
 }
 
 function std_backup_file() {
@@ -675,10 +691,6 @@ function std_config_filesystem() {
       ;;
     --)
       break
-      ;;
-    *)
-      std_prtmsg STDERR "invalid option: \"$1\""
-      return 2
       ;;
     esac
   done
