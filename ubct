@@ -46,25 +46,27 @@ function ubct_show_help() {
   
 Usage: ubct [MODULE] {OPTION [ARGUMENT]}...
 
-Basic:
-  ubct                                         print version information and exit
-  ubct -V|--version|version                    print version information and exit
-  ubct -h|--help|help                          display this help and exit
-  ubct -u|--update|update                      download from GitHub and reinstall
+1 - ubct
+null                    print version information and exit
+-V|--version|version    print version information and exit
+-h|--help|help          display this help and exit
+-u|--update|update      download from GitHub and reinstall
 
-Config baseline:
-  ubct config baseline -a|--all                auto-detect os and configure it
-  ubct config baseline -o|--only <FUNCNAME>    if FUNCNAME is a valid configuration of current os, execute it
+2 - ubct config baseline
+null                    auto-detect os and configure it
+-o|--only <FUNCNAME>    if <FUNCNAME> is a valid configuration of current os, execute it
 
-Verify baseline:
-  ubct verify baseline -a|--all                auto-detect os and verify its config
-  ubct verify baseline -o|--only <ITEMNAME>    if ITEMNAME is a group of valid verifications of current os, verify it 
+3 - ubct verify baseline
+null                    auto-detect os and verify its config, show error items only
+-o|--only <ITEMNAME>    if <ITEMNAME> is a group of valid verifications of current os, verify it
+-t|--test               show all details of verification
+-l|--log <FILENAME>     output to both the stdout and a file with name <FILENAME>
 
-Change hostname:
-  ubct config hostname <HOSTNAME>              change hostname to HOSTNAME
+4 - ubct config hostname
+<HOSTNAME>              change hostname to <HOSTNAME>
 
-Verify hostname:
-  ubct verify hostname                         verify hostname
+5 - ubct verify hostname
+null                    verify hostname
 
 EOF
 

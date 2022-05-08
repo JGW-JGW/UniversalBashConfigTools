@@ -105,7 +105,7 @@ function config_centos_7() {
 
   while true; do
     case "$1" in
-    -a | --all)
+    "")
       # fix bugs for the specific version of os
       fix_bug
 
