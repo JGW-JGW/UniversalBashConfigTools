@@ -1,0 +1,1 @@
+timezone||hard||date "+%Z"||equal||CST||timedatectl set-timezone Asia/Beijing
