@@ -40,7 +40,7 @@ function verify_baseline() {
     -o | --only)
       only_flag=true
       only_item="$2"
-      if ! grep -E "^${only_item}[[:space:]]+" "${file}"; then
+      if ! grep -q "^${only_item}||" "${file}"; then
         std_prtmsg FERR "unsupported baseline verify item: \"${only_item}\", for ${OS_FULL_NAME}"
         return 4
       fi
