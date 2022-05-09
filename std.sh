@@ -274,9 +274,9 @@ function std_cmd_exists() {
 }
 
 function std_is_file_writable() {
-  local file
+  local filename
 
-  file=$*
+  filename=$*
 
   if [[ -f ${filename} ]]; then
     std_prtmsg STDINFO "filename \"${filename}\" is writable"

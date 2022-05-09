@@ -1,8 +1,8 @@
 #!/bin/bash
 function verify_baseline() {
-  local parameters test_flag file current_time log_flag log_file only_flag only_item line itemname importance current operator required tips null result all_correct len
+  local parameters test_flag vrf_file current_time log_flag log_file only_flag only_item itemname importance current operator required tips null result all_correct len line
 
-  file="${UBCT_VERIFY_DIR}/baseline/${OS_FULL_NAME}.vrf"
+  vrf_file="${UBCT_VERIFY_DIR}/baseline/${OS_FULL_NAME}.vrf"
   test_flag=false
   log_flag=false
   only_flag=false
@@ -11,8 +11,8 @@ function verify_baseline() {
   all_correct=true
   len=70
 
-  if [[ ! -f ${file} ]]; then
-    std_prtmsg FERR "not a file or not found: \"${file}\""
+  if [[ ! -f ${vrf_file} ]]; then
+    std_prtmsg FERR "not a file or not found: \"${vrf_file}\""
     return 2
   fi
 
@@ -39,7 +39,7 @@ function verify_baseline() {
       ;;
     -o | --only)
       only_item="$2"
-      if ! grep -q "^${only_item}||" "${file}"; then
+      if ! grep -q "^${only_item};;" "${vrf_file}"; then
         std_prtmsg FERR "unsupported baseline verify item: \"${only_item}\", for ${OS_FULL_NAME}"
         return 4
       fi
@@ -68,19 +68,19 @@ function verify_baseline() {
 
   if ${only_flag}; then
     while read -r line; do
-      itemname=$(std_strip "$(echo "${line}" | awk -v FS="||" '{print $1}')")
+      itemname=$(std_strip "$(echo "${line}" | awk -v FS=';;' '{print $1}')")
 
-      importance=$(std_strip "$(echo "${line}" | awk -v FS="||" '{print $2}')")
+      importance=$(std_strip "$(echo "${line}" | awk -v FS=";;" '{print $2}')")
 
-      current=$(std_strip "$(eval "$(echo "${line}" | awk -v FS="||" '{print $3}')")")
+      current=$(std_strip "$(eval "$(echo "${line}" | awk -v FS=";;" '{print $3}')")")
       [[ ${current} =~ '$' ]] && current=$(eval echo "${current}")
 
-      operator=$(std_strip "$(echo "${line}" | awk -v FS="||" '{print $4}')")
+      operator=$(std_strip "$(echo "${line}" | awk -v FS=";;" '{print $4}')")
 
-      required=$(std_strip "$(echo "${line}" | awk -v FS="||" '{print $5}')")
+      required=$(std_strip "$(echo "${line}" | awk -v FS=";;" '{print $5}')")
       [[ ${required} =~ '$' ]] && required=$(eval echo "${required}")
 
-      tips=$(std_strip "$(echo "${line}" | awk -v FS="||" '{print $6}')")
+      tips=$(std_strip "$(echo "${line}" | awk -v FS=";;" '{print $6}')")
       [[ ${tips} == "${null}" ]] && tips="please refer to official operation manuals"
 
       # deal with test_flag == true
@@ -90,7 +90,7 @@ function verify_baseline() {
           cat <<EOF
 itemname:     ${itemname}
 importance:   [${importance}]
-command:      $(echo "${line}" | awk -v FS="||" '{print $3}')
+command:      $(echo "${line}" | awk -v FS=";;" '{print $3}')
 current:      <${current}>
 operator:     ${operator}
 required:     <${required}>
@@ -102,7 +102,7 @@ EOF
           tee -a "${log_file}" <<EOF
 itemname:     ${itemname}
 importance:   [${importance}]
-command:      $(echo "${line}" | awk -v FS="||" '{print $3}')
+command:      $(echo "${line}" | awk -v FS=";;" '{print $3}')
 current:      <${current}>
 operator:     ${operator}
 required:     <${required}>
@@ -166,11 +166,11 @@ EOF
           std_prtline -l${len} -c=
         else # log_flag == true
           if [[ ${result} -eq 1 ]]; then
-            printf "\e[47;30mERROR\e[0m\n" | tee -a "${log_file}"
+            printf "RESULT: \e[47;30mERROR\e[0m\n" | tee -a "${log_file}"
           elif [[ ${result} -eq 2 ]]; then
-            printf "\e[47;30;5mERROR\e[0m\n" | tee -a "${log_file}"
+            printf "RESULT: \e[47;30;5mERROR\e[0m\n" | tee -a "${log_file}"
           else # result == 0
-            printf "\e[31;1mCORRECT\e[0m\n" | tee -a "${log_file}"
+            printf "RESULT: \e[31;1mCORRECT\e[0m\n" | tee -a "${log_file}"
           fi
           std_prtline -l${len} -c= | tee -a "${log_file}"
         fi
@@ -197,9 +197,7 @@ EOF
           std_prtline -l${len} -c= | tee -a "${log_file}"
         fi
       fi
-    done \
-      < \
-      <(grep -E "^${only_item}[[:space:]]+" "${file}")
+    done < <(grep -E "^${only_item};;" "${vrf_file}")
 
     if ${all_correct}; then
       if ! ${log_flag}; then

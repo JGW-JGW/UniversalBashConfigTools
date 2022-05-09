@@ -1,1 +1,2 @@
-timezone||hard||date "+%Z"||equal||CST||timedatectl set-timezone Asia/Beijing
+timezone;;hard;;date "+%Z";;equal;;CST;;timedatectl set-timezone Asia/Beijing
+ssl_key;;hard;;[[ -f /etc/ssl/privatekeys ]] && echo CORRECT || echo "ERROR: /etc/ssl/privatekeys exists";;equal;;CORRECT;;backup and rm /etc/ssl/privatekeys
