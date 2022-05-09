@@ -2,7 +2,7 @@
 function verify_baseline() {
   local parameters test_flag file current_time log_flag log_file only_flag only_item line itemname importance current operator required tips null result all_correct len
 
-  if ! parameters=$(getopt -o tlo: --long test,log:,only: -n "$0" -- "$@"); then
+  if ! parameters=$(getopt -o tl:o: --long test,log:,only: -n "$0" -- "$@"); then
     return 1
   fi
 
@@ -203,18 +203,18 @@ EOF
 
     if ${all_correct}; then
       if ! ${log_flag}; then
-        std_prtline -l${len} -t"\e[31;1mALL CORRECT\e[0m"
+        std_prtline -l${len} -t"ALL CORRECT"
         std_prtline -l${len} -c=
       else
-        std_prtline -l${len} -t"\e[31;1mALL CORRECT\e[0m" | tee -a "${log_file}"
+        std_prtline -l${len} -t"ALL CORRECT" | tee -a "${log_file}"
         std_prtline -l${len} -c= | tee -a "${log_file}"
       fi
     else # all_correct == false
       if ! ${log_flag}; then
-        std_prtline -l${len} -t"\e[47;30;5mERROR\e[0m: check info above for details"
+        std_prtline -l${len} -t"ERROR: check info above for details"
         std_prtline -l${len} -c=
       else
-        std_prtline -l${len} -t"\e[47;30;5mERROR\e[0m: check info above for details" | tee -a "${log_file}"
+        std_prtline -l${len} -t"ERROR: check info above for details" | tee -a "${log_file}"
         std_prtline -l${len} -c= | tee -a "${log_file}"
       fi
     fi

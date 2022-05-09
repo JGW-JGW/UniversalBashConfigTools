@@ -145,6 +145,7 @@ function std_prtmsg() {
   return 0
 }
 
+# 使用该函数时无法使用样式，比如红色字体和闪烁等
 function std_prtline() {
   local parameters char title len_total
 
@@ -908,3 +909,6 @@ function std_systemctl() {
     ;;
   esac
 }
+
+
+std_prtline -l50 -t"\e[31;1mALL CORRECT\e[0m\n"
