@@ -909,6 +909,3 @@ function std_systemctl() {
     ;;
   esac
 }
-
-
-std_prtline -l50 -t"\e[31;1mALL CORRECT\e[0m\n"

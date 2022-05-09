@@ -2,16 +2,10 @@
 function verify_baseline() {
   local parameters test_flag file current_time log_flag log_file only_flag only_item line itemname importance current operator required tips null result all_correct len
 
-  if ! parameters=$(getopt -o tl:o: --long test,log:,only: -n "$0" -- "$@"); then
-    return 1
-  fi
-
-  eval set -- "${parameters}"
-
+  file="${UBCT_VERIFY_DIR}/baseline/${OS_FULL_NAME}.vrf"
   test_flag=false
   log_flag=false
   only_flag=false
-  file="${UBCT_VERIFY_DIR}/baseline/${OS_FULL_NAME}.vrf"
   current_time=$(date "+%Y-%m-%d %H:%M:%S")
   null='null'
   all_correct=true
@@ -22,6 +16,12 @@ function verify_baseline() {
     return 2
   fi
 
+  if ! parameters=$(getopt -o tl:o: --long test,log:,only: -n "$0" -- "$@"); then
+    return 1
+  fi
+
+  eval set -- "${parameters}"
+
   while true; do
     case "$1" in
     -t | --test)
@@ -29,21 +29,21 @@ function verify_baseline() {
       shift
       ;;
     -l | --log)
-      log_flag=true
       log_file="$2"
       if ! std_is_file_writable "${log_file}"; then
         std_prtmsg FERR "please check info above..."
         return 3
       fi
+      log_flag=true
       shift 2
       ;;
     -o | --only)
-      only_flag=true
       only_item="$2"
       if ! grep -q "^${only_item}||" "${file}"; then
         std_prtmsg FERR "unsupported baseline verify item: \"${only_item}\", for ${OS_FULL_NAME}"
         return 4
       fi
+      only_flag=true
       shift 2
       ;;
     --)
