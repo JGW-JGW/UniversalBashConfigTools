@@ -197,28 +197,27 @@ EOF
           std_prtline -l${len} -c= | tee -a "${log_file}"
         fi
       fi
-
-      if ${all_correct}; then
-        if ! ${log_flag}; then
-          std_prtline -l${len} -t"\e[31;1mALL CORRECT\e[0m"
-          std_prtline -l${len} -c=
-        else
-          std_prtline -l${len} -t"\e[31;1mALL CORRECT\e[0m" | tee -a "${log_file}"
-          std_prtline -l${len} -c= | tee -a "${log_file}"
-        fi
-      else # all_correct == false
-        if ! ${log_flag}; then
-          std_prtline -l${len} -t"\e[47;30;5mERROR\e[0m: check info above for details"
-          std_prtline -l${len} -c=
-        else
-          std_prtline -l${len} -t"\e[47;30;5mERROR\e[0m: check info above for details" | tee -a "${log_file}"
-          std_prtline -l${len} -c= | tee -a "${log_file}"
-        fi
-      fi
-
     done \
       < \
       <(grep -E "^${only_item}[[:space:]]+" "${file}")
+
+    if ${all_correct}; then
+      if ! ${log_flag}; then
+        std_prtline -l${len} -t"\e[31;1mALL CORRECT\e[0m"
+        std_prtline -l${len} -c=
+      else
+        std_prtline -l${len} -t"\e[31;1mALL CORRECT\e[0m" | tee -a "${log_file}"
+        std_prtline -l${len} -c= | tee -a "${log_file}"
+      fi
+    else # all_correct == false
+      if ! ${log_flag}; then
+        std_prtline -l${len} -t"\e[47;30;5mERROR\e[0m: check info above for details"
+        std_prtline -l${len} -c=
+      else
+        std_prtline -l${len} -t"\e[47;30;5mERROR\e[0m: check info above for details" | tee -a "${log_file}"
+        std_prtline -l${len} -c= | tee -a "${log_file}"
+      fi
+    fi
   else # only_flag == false
     # TODO
     std_prtmsg SKIP "TODO"
