@@ -157,20 +157,20 @@ EOF
       if ${test_flag}; then
         if ! ${log_flag}; then
           if [[ ${result} -eq 1 ]]; then
-            printf "\e[47;30mERROR\e[0m\n"
+            printf "RESULT:       \e[47;30mERROR\e[0m\n"
           elif [[ ${result} -eq 2 ]]; then
-            printf "\e[47;30;5mERROR\e[0m\n"
+            printf "RESULT:       \e[47;30;5mERROR\e[0m\n"
           else # result == 0
-            printf "\e[31;1mCORRECT\e[0m\n"
+            printf "RESULT:       \e[31;1mCORRECT\e[0m\n"
           fi
           std_prtline -l${len} -c=
         else # log_flag == true
           if [[ ${result} -eq 1 ]]; then
-            printf "RESULT: \e[47;30mERROR\e[0m\n" | tee -a "${log_file}"
+            printf "RESULT:       \e[47;30mERROR\e[0m\n" | tee -a "${log_file}"
           elif [[ ${result} -eq 2 ]]; then
-            printf "RESULT: \e[47;30;5mERROR\e[0m\n" | tee -a "${log_file}"
+            printf "RESULT:       \e[47;30;5mERROR\e[0m\n" | tee -a "${log_file}"
           else # result == 0
-            printf "RESULT: \e[31;1mCORRECT\e[0m\n" | tee -a "${log_file}"
+            printf "RESULT:       \e[31;1mCORRECT\e[0m\n" | tee -a "${log_file}"
           fi
           std_prtline -l${len} -c= | tee -a "${log_file}"
         fi
@@ -178,23 +178,31 @@ EOF
         if ! ${log_flag}; then
           if [[ ${result} -eq 1 ]]; then
             printf "%-12s\e[31;1m%s\e[0m [\e[47;30m%s\e[0m]\n" "ITEMNAME:" "${itemname}" "${importance}"
+            printf "%-12s%s\n" "CURRENT:" "${current}"
+            printf "%-12s%s %s\n" "REQUIRED:" "${operator}" "${required}"
+            printf "%-12s%s\n" "TIPS:" "${tips}"
+            std_prtline -l${len} -c=
           elif [[ ${result} -eq 2 ]]; then
             printf "%-12s\e[31;1m%s\e[0m [\e[47;30;5m%s\e[0m]\n" "ITEMNAME:" "${itemname}" "${importance}"
+            printf "%-12s%s\n" "CURRENT:" "${current}"
+            printf "%-12s%s %s\n" "REQUIRED:" "${operator}" "${required}"
+            printf "%-12s%s\n" "TIPS:" "${tips}"
+            std_prtline -l${len} -c=
           fi
-          printf "%-12s%s\n" "CURRENT:" "${current}"
-          printf "%-12s%s %s\n" "REQUIRED:" "${operator}" "${required}"
-          printf "%-12s%s\n" "TIPS:" "${tips}"
-          std_prtline -l${len} -c=
         else # log_flag == true
           if [[ ${result} -eq 1 ]]; then
             printf "%-12s\e[31;1m%s\e[0m [\e[47;30m%s\e[0m]\n" "ITEMNAME:" "${itemname}" "${importance}" | tee -a "${log_file}"
+            printf "%-12s%s\n" "CURRENT:" "${current}" | tee -a "${log_file}"
+            printf "%-12s%s %s\n" "REQUIRED:" "${operator}" "${required}" | tee -a "${log_file}"
+            printf "%-12s%s\n" "TIPS:" "${tips}" | tee -a "${log_file}"
+            std_prtline -l${len} -c= | tee -a "${log_file}"
           elif [[ ${result} -eq 2 ]]; then
             printf "%-12s\e[31;1m%s\e[0m [\e[47;30;5m%s\e[0m]\n" "ITEMNAME:" "${itemname}" "${importance}" | tee -a "${log_file}"
+            printf "%-12s%s\n" "CURRENT:" "${current}" | tee -a "${log_file}"
+            printf "%-12s%s %s\n" "REQUIRED:" "${operator}" "${required}" | tee -a "${log_file}"
+            printf "%-12s%s\n" "TIPS:" "${tips}" | tee -a "${log_file}"
+            std_prtline -l${len} -c= | tee -a "${log_file}"
           fi
-          printf "%-12s%s\n" "CURRENT:" "${current}" | tee -a "${log_file}"
-          printf "%-12s%s %s\n" "REQUIRED:" "${operator}" "${required}" | tee -a "${log_file}"
-          printf "%-12s%s\n" "TIPS:" "${tips}" | tee -a "${log_file}"
-          std_prtline -l${len} -c= | tee -a "${log_file}"
         fi
       fi
     done < <(grep -E "^${only_item};;" "${vrf_file}")
