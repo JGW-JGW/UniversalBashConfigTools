@@ -183,7 +183,7 @@ config)
   ;;
 verify)
   shift
-  verify_control $@
+  vrf_control $@
   ;;
 *)
   std_prtmsg ERROR "invalid module or option: \"$1\""

@@ -1,2 +1,3 @@
 timezone;;hard;;date "+%Z";;equal;;CST;;timedatectl set-timezone Asia/Beijing
 ssl_key;;hard;;[[ -f /etc/ssl/privatekeys ]] && echo "ERROR: /etc/ssl/privatekeys exists" || echo CORRECT;;equal;;CORRECT;;backup and rm /etc/ssl/privatekeys
+users;;hard;;vrf_users;;equal;;CORRECT;;check /etc/passwd and /etc/shadow, use "useradd", "chpasswd", "passwd", "usermod", etc.

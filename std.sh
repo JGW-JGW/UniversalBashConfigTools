@@ -110,8 +110,11 @@ function std_prtmsg() {
   ERROR | CHECK)
     echo -e "\e[47;30;5m${type}\e[0m\c"
     ;;
-  INFO)
-    echo -e "${type}\c"
+  INFO | I)
+    echo -e "INFO\c"
+    ;;
+  BASICERROR | BASICERR | BE)
+    echo -e "ERROR\c"
     ;;
   STDINFO)
     echo -e "---- \e[40;31;1m${FUNCNAME[1]} \e[0mINFO\c"
@@ -908,4 +911,24 @@ function std_systemctl() {
     return 3
     ;;
   esac
+}
+
+function std_user_exists() {
+  local user="$1"
+  grep -q "^${user}:" /etc/passwd && return 0 || return 1
+}
+
+function std_is_user_password_normal() {
+  local user="$1"
+  [[ $(grep "^${user}:" /etc/shadow | awk -v FS=':' '{print length($2)}') -gt 2 ]] && return 0 || return 1
+}
+
+function std_is_user_locked() {
+  local user="$1"
+
+  if std_user_exists "${user}"; then
+    passwd -S "${user}" | awk '{print $2}' | grep -q L && return 0 || return 1
+  fi
+
+  return 0
 }

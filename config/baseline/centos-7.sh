@@ -81,7 +81,7 @@ function lock_users() {
   std_prtmsg FS
 
   for user in at bin daemon ftp games gdm haldaemon lp mail messagebus nobody ntp postfix sshd suse-ncc wwwrun man news uucp ftpsecure polkituser pulse puppet rtkit polkitd uuidd; do
-    if std_amid "^${user}:" /etc/passwd; then
+    if std_user_exists "${user}"; then
       passwd -l ${user} 1>/dev/null
       std_prtmsg FINFO "\"${user}\" is locked"
     fi

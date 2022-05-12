@@ -1,5 +1,35 @@
 #!/bin/bash
-function verify_baseline() {
+function vrf_users() {
+  # 检查所有新增用户的状态
+  for user in sysop jgw; do
+    if ! std_user_exists "${user}"; then
+      std_prtmsg BE "${user} not found in /etc/passwd"
+      return 1
+    fi
+
+    if ! std_is_user_password_normal "${user}"; then
+      std_prtmsg BE "${user}'s password is not valid in /etc/shadow"
+      return 2
+    fi
+  done
+
+  # 检查所有需要锁定的用户的状态
+  for user in at bin daemon ftp games gdm haldaemon lp mail messagebus nobody ntp postfix sshd suse-ncc wwwrun man news uucp ftpsecure polkituser pulse puppet rtkit polkitd uuidd; do
+    if std_user_exists "${user}"; then
+      if ! std_is_user_locked "${user}"; then
+        std_prtmsg BE "${user} is not locked"
+        return 3
+      fi
+    fi
+  done
+
+  echo CORRECT
+  return 0
+}
+
+
+
+function vrf_baseline() {
   local parameters test_flag vrf_file current_time log_flag log_file only_flag only_item itemname importance current operator required tips null result all_correct len line
 
   vrf_file="${UBCT_VERIFY_DIR}/baseline/${OS_FULL_NAME}.vrf"
